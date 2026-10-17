@@ -1,0 +1,22 @@
+{
+  "name": "dead-pixels",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "DEAD PIXELS - a 2D puzzle-platformer trapped inside a 1980s CRT television. Ludum Dare 60: OLD TECH.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "qa": "node qa-full.cjs"
+  },
+  "dependencies": {
+    "phaser": "^3.90.0"
+  },
+  "devDependencies": {
+    "playwright": "^1.64.1",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.7"
+  }
+}

@@ -1,0 +1,45 @@
+# DEAD PIXELS — Signal Archive art bible
+
+## World
+An abandoned broadcast archive: ferrite cores, tape libraries, relay cabinets,
+phosphor terminals and suspended cable looms. The explorer is a maintenance robot
+with a small amber scarf, ceramic helmet and cyan face. No borrowed characters.
+
+## Pixel rules
+- Logical screen 320×180; world and collisions remain 640×180.
+- Structural module 16×16. All artwork uses whole-pixel marks and nearest-neighbor
+  sampling. No painted/vector art inside the game and no scaling of physics bodies.
+- Explorer sheet: uniform 16×24 cells, bottom-center pivot. A separate 8×12 carrier
+  retains the original 6×12 body, offset (1,0), speed 85, jump -205, gravity 500.
+- Light comes from upper left. One-pixel dark outlines; two-tone bevels, selective
+  rim lighting, sparse dither, no random noise blanket.
+- Walkable tops are uninterrupted light rails exactly on collision bounds. Sides
+  are capped; center panels vary by module. Decorations never add implied ledges.
+
+## Channel vocabulary
+REALITY: navy #101b29, oxidized teal #31535d, steel #8ca8ad, amber #deb477.
+Intact copper busbars, green phosphor, ordered tape cabinets.
+MEMORY: ink violet #181526, slate lavender #4c4465, silver #b4b6d1.
+Archived silhouettes, missing scan rows, wireframe diagrams and dormant tape reels.
+VOID: charcoal #150f18, rust #53303a, burnt orange #c47758.
+Severed wires, cracked monitors, disconnected relay cores and small embers.
+These are authored structural variants, not fullscreen color filters.
+
+## Contrast and animation
+Background edges stay below gameplay contrast. Platform tops and robot display
+are the brightest continuous features. EXIT has a cyan doorway and small arrow.
+Idle 4 frames; run 6; jump 2; fall 2; land 3. Every frame differs; squash is drawn
+inside the sheet. No scale animation on the collision carrier.
+
+## Budget and presentation
+Three preloaded channel groups, three raster layers each. Only one visible group.
+At most 12 dust motes + 6 timed signal lights; no runtime terrain generation,
+per-frame textures, expensive shaders, bloom filters or network requests.
+Menu is a warm-grey molded receiver. During gameplay the cabinet recedes and the
+16:9 display fills the viewport using the largest fitting integer scale (fractional
+nearest-neighbor fallback on narrow phones). Scanlines <8%, mild vignette only.
+The existing ChannelTransition owns temporary interference.
+
+## Asset provenance
+See ASSET_CREDITS.md. Keep original generation scripts outside public/. All shipped
+assets are used. Source downloads and working previews stay outside the build.

@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="DEAD PIXELS - a 2D puzzle-platformer trapped inside a 1980s CRT television. Ludum Dare 60: OLD TECH." />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%231a1c2c'/><rect x='4' y='4' width='8' height='8' fill='%2373eff7'/></svg>"
+    />
+    <title>DEAD PIXELS</title>
+  </head>
+  <body>
+    <div class="tv-room">
+      <div class="crt-tv">
+        <div class="tv-top"></div>
+        <div class="tv-body">
+          <div class="screen-bezel">
+            <div class="screen-glass">
+              <div id="game-root"></div>
+              <div class="crt-scanlines"></div>
+              <div class="crt-vignette"></div>
+              <div class="crt-glass"></div>
+              <div class="crt-interference" aria-hidden="true"></div>
+            </div>
+          </div>
+          <div class="tv-controls">
+            <div class="brand-badge">DEAD PIXELS</div>
+            <div class="channel-controls" aria-label="Channel selection">
+              <button type="button" class="channel-btn channel-active" data-channel="1">01 REALITY</button>
+              <button type="button" class="channel-btn" data-channel="2">02 MEMORY</button>
+              <button type="button" class="channel-btn" data-channel="3">03 VOID</button>
+            </div>
+            <div class="power-indicator">
+              <div class="power-led"></div>
+              <div class="power-label">POWER</div>
+            </div>
+            <div class="tuning-dial"></div>
+          </div>
+        </div>
+        <div class="tv-stand"></div>
+      </div>
+      <div class="ambient-glow"></div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
