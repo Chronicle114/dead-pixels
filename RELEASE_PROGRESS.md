@@ -52,3 +52,13 @@ Milestones are recorded here only after their required checks actually pass.
 - Typecheck/build pass; real-input audio unlock/step/jump/land/channel/cleanup
   checks pass; browser regression 47/47. Music files and listening-quality
   review are not claimed in this milestone; soundtrack follows in E.
+
+## E — soundtrack (verified playback, listening limitation recorded)
+- Ten actual local WAV files: menu, intro, seven independently arranged level
+  compositions and ending, 33–60 seconds each, 16 bars with a recurring motif.
+  Original authoring source, score/PCM hashes and CC0 credits are included.
+- PCM format/non-silence/peak/loop-edge/uniqueness checks pass for all ten files.
+  Typecheck/build and audio browser QA pass. Full zero-hit campaign 306/306,
+  including each level's correct decoded track and bounded crossfade voices.
+- No listening attachment capability exists in this harness. Subjective music
+  quality/mastering is explicitly unverified; see AUDIO_CREDITS.md.

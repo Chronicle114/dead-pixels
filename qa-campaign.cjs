@@ -120,6 +120,8 @@ async function run(browser, width, height) {
       await page.waitForFunction(n=>{const s=window.deadPixels.getState();return s.mode==='game'&&s.level.number===n&&s.phase==='playing'&&s.grounded;},current,{timeout:12000,polling:'raf'});
       await safe('spawn');
       const start=await get();
+      await page.waitForFunction(id=>window.deadPixels.getAudioState().playing===id,`level-${current}`,{timeout:7000});
+      check((await page.evaluate(()=>window.deadPixels.getAudioState())).musicVoices<=2,`${current} correct soundtrack with bounded crossfade voices`);
       check(start.physics.dynamic===1 && start.physics.static===start.platforms.length+1,`${current} old bodies cleaned up between levels`);
       await page.waitForTimeout(220);
       await shot(`level-${current}-start`);
@@ -228,6 +230,8 @@ async function run(browser, width, height) {
       results.push({viewport:`${width}x${height}`,level:current,title:end.level.title,checkpoints:end.level.reached,airSwitches:end.airSwitches,respawns:end.respawns,health:end.health,fps:end.fps,elapsedSeconds:end.level.elapsedSeconds});
     }
     await wait(()=>window.deadPixels.getState().mode==='ending');
+    await wait(()=>window.deadPixels.getAudioState().playing==='ending');
+    check((await page.evaluate(()=>window.deadPixels.getAudioState())).error===null,'ending soundtrack decoded without errors');
     check((await get()).messages.includes('TRANSMISSION COMPLETE'),'final TRANSMISSION COMPLETE');
     check((await get()).level.cleared.length===7,'seven actual exits recorded');
     await shot('ending-transmission');

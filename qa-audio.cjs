@@ -6,7 +6,9 @@ try{
   assert.equal((await page.evaluate(()=>window.deadPixels.getAudioState())).state,'locked');
   await page.keyboard.press('ArrowRight');
   await page.waitForFunction(()=>window.deadPixels.getAudioState().state==='running');
+  await page.waitForFunction(()=>window.deadPixels.getAudioState().playing==='menu');
   await page.keyboard.press('Enter');await page.waitForFunction(()=>window.deadPixels.getState().phase==='playing');
+  await page.waitForFunction(()=>window.deadPixels.getAudioState().playing==='level-1');
   await page.keyboard.down('ArrowRight');await page.waitForTimeout(450);await page.keyboard.up('ArrowRight');await page.waitForTimeout(60);
   const footsteps=await page.evaluate(()=>window.deadPixels.getAudioState().cues.footstep||0);assert.ok(footsteps>0);
   await page.waitForTimeout(350);assert.equal(await page.evaluate(()=>window.deadPixels.getAudioState().cues.footstep||0),footsteps);
@@ -14,7 +16,7 @@ try{
   assert.equal(await page.evaluate(()=>window.deadPixels.getAudioState().cues.footstep||0),footsteps);
   await page.waitForFunction(()=>window.deadPixels.getState().grounded);
   await page.keyboard.press('Digit2');await page.waitForTimeout(200);
-  const a=await page.evaluate(()=>window.deadPixels.getAudioState());assert.ok(a.cues.jump>0&&a.cues.land>0&&a.cues.channel>0);assert.equal(a.error,null);
+  const a=await page.evaluate(()=>window.deadPixels.getAudioState());assert.ok(a.cues.jump>0&&a.cues.land>0&&a.cues.channel>0);assert.equal(a.error,null);assert.ok(a.history.includes('menu')&&a.history.includes('level-1'));assert.ok(a.musicVoices<=2);
   await page.waitForTimeout(1200);assert.equal((await page.evaluate(()=>window.deadPixels.getAudioState())).sfxVoices,0);
   assert.equal(errors.length,0);console.log('Audio engine: trusted unlock, grounded animation footsteps, jump/land/channel cues and voice cleanup PASS');
 }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});
