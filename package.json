@@ -9,7 +9,9 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "qa": "node qa-full.cjs"
+    "qa": "node qa-full.cjs && node qa-campaign.cjs",
+    "qa:regression": "node qa-full.cjs",
+    "qa:campaign": "node qa-campaign.cjs"
   },
   "dependencies": {
     "phaser": "^3.90.0"

@@ -3,7 +3,9 @@ import { CHANNELS, type ChannelId, isPlatformActiveIn } from '../config/Channels
 import { GAME_WIDTH, SceneKeys } from '../config/Constants';
 import { Palette } from '../config/Palette';
 import { Player } from '../entities/Player';
-import { TEST_LEVEL } from '../levels/TestLevel';
+import type { LevelDefinition } from '../levels/LevelTypes';
+import { isSafePoint } from '../levels/ValidateLevel';
+import { levelManager } from '../systems/LevelManager';
 import { ChannelEvents, ChannelSystem } from '../systems/ChannelSystem';
 import { ChannelTransition } from '../systems/ChannelTransition';
 import { buildLevel, type BuiltLevel } from '../systems/LevelBuilder';
@@ -11,9 +13,9 @@ import { PixelFont } from '../systems/PixelFont';
 import { ArchiveEnvironment } from '../systems/ArchiveEnvironment';
 import { connectTelevision, setPresentation } from '../ui/Television';
 import { ChannelHud } from '../ui/ChannelHud';
+import { LevelGuidance } from '../ui/LevelGuidance';
 
 const FALL_THRESHOLD_Y = 170;
-const RESPAWN_SAFE_DELAY_MS = 800;
 const PLAYER_RECT_INSET = 1;
 
 export class GameScene extends Phaser.Scene {
@@ -23,22 +25,25 @@ export class GameScene extends Phaser.Scene {
   private fx!: ChannelTransition;
   private hud!: ChannelHud;
   private environment!: ArchiveEnvironment;
-  private lastGrounded: { x: number; y: number } | null = null;
-  private lastRespawnAt = 0;
+  private guidance!: LevelGuidance;
+  private definition!: LevelDefinition;
+  private airSwitches = 0;
+  private respawns = 0;
   private completed = false;
-  private completionPhase: 'playing' | 'signal' | 'complete' = 'playing';
+  private completionPhase: 'arrival' | 'playing' | 'signal' = 'arrival';
 
   constructor() {
     super(SceneKeys.Game);
   }
 
   create(): void {
-    const data = TEST_LEVEL;
+    const data = levelManager.current;
+    this.definition = data;
 
     this.completed = false;
-    this.completionPhase = 'playing';
-    this.lastGrounded = null;
-    this.lastRespawnAt = 0;
+    this.completionPhase = 'arrival';
+    this.airSwitches = 0;
+    this.respawns = 0;
 
     this.cameras.main.setBackgroundColor(CHANNELS[data.initialChannel].visual.background);
     this.cameras.main.setBounds(0, 0, data.width, data.height);
@@ -47,7 +52,7 @@ export class GameScene extends Phaser.Scene {
     setPresentation('game');
     this.scale.getParentBounds();
     this.scale.refresh();
-    this.environment = new ArchiveEnvironment(this);
+    this.environment = new ArchiveEnvironment(this, false, data);
 
     this.level = buildLevel(this, data);
 
@@ -70,33 +75,28 @@ export class GameScene extends Phaser.Scene {
 
     this.level.setChannel(this.channels.active);
     this.applyChannelVisuals(this.channels.active);
-    this.fx.setInstability(this.channels.active);
+    this.fx.setInstability(this.channels.active, data.visuals?.instability);
 
-    connectTelevision(this.channels);
-
-    PixelFont.text(this, 'ESC - MENU', Palette.gray, 1, 0, 0)
-      .setOrigin(0, 0)
-      .setPosition(6, 6)
-      .setScrollFactor(0);
-
-    PixelFont.text(this, 'A/D MOVE  SPACE JUMP  1/2/3 CHANNEL', Palette.silver, 1, 0, 0)
-      .setOrigin(0, 0)
-      .setPosition(6, 20)
-      .setScrollFactor(0)
-      .setDepth(100).setAlpha(0.8);
+    this.guidance = new LevelGuidance(this, data, levelManager.number, levelManager.total);
+    this.showArrival();
 
     const keyboard = this.input.keyboard;
 
-    if (keyboard) {
-      keyboard.on('keydown-ESC', () => {
-        this.scene.start(SceneKeys.Menu);
-      });
-    }
+    const menu = () => this.scene.start(SceneKeys.Menu);
+    const restart = () => {
+      if (this.completed) return;
+      levelManager.restart();
+      this.scene.restart();
+    };
+    keyboard?.on('keydown-ESC', menu);
+    keyboard?.on('keydown-R', restart);
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       connectTelevision(null);
       this.fx.destroy();
       this.hud.destroy();
+      keyboard?.off('keydown-ESC', menu);
+      keyboard?.off('keydown-R', restart);
     });
   }
 
@@ -105,8 +105,15 @@ export class GameScene extends Phaser.Scene {
 
     const body = this.player.body as Phaser.Physics.Arcade.Body;
 
+    this.environment.update(this.cameras.main.scrollX);
+    if (this.completionPhase !== 'playing') return;
+    this.guidance.update(this.player.x);
     if (body.blocked.down || body.touching.down) {
-      this.lastGrounded = { x: this.player.x, y: this.player.y };
+      for (const point of this.definition.checkpoints ?? []) {
+        if (Math.abs(this.player.x - point.x) < 13 && Math.abs(this.player.y - point.y) < 3 && levelManager.activate(point)) {
+          this.guidance.activate(point);
+        }
+      }
     }
 
     if (!this.completed && this.player.y > FALL_THRESHOLD_Y) {
@@ -148,10 +155,12 @@ export class GameScene extends Phaser.Scene {
   }
 
   private handleChannelChanged(to: ChannelId): void {
+    const body = this.player.body as Phaser.Physics.Arcade.Body;
+    if (this.completionPhase === 'playing' && !body.blocked.down && !body.touching.down && body.velocity.y !== 0) this.airSwitches++;
     this.level.setChannel(to);
     this.applyChannelVisuals(to);
     this.hud.setChannel(to);
-    this.fx.setInstability(to);
+    this.fx.setInstability(to, this.definition.visuals?.instability);
     this.fx.playStatic(CHANNELS[to].visual.accent);
 
   }
@@ -168,16 +177,32 @@ export class GameScene extends Phaser.Scene {
   }
 
   private respawnPlayer(): void {
-    const now = this.time.now;
-    const grounded = this.lastGrounded;
-    const target =
-      grounded !== null && now - this.lastRespawnAt > RESPAWN_SAFE_DELAY_MS ? grounded : TEST_LEVEL.spawn;
-
-    this.lastRespawnAt = now;
-    this.lastGrounded = null;
-    this.player.setPosition(target.x, target.y);
-    this.player.setVelocity(0, 0);
+    const target = levelManager.respawnPoint;
+    if (!isSafePoint(this.definition, target, target.channel)) throw new Error('Invalid checkpoint');
+    const body = this.player.body as Phaser.Physics.Arcade.Body;
+    body.reset(target.x, target.y);
+    this.channels.restore(target.channel);
+    this.respawns++;
+    levelManager.registerFall();
     this.fx.playRejected();
+  }
+
+  private showArrival(): void {
+    this.player.setControlsEnabled(false);
+    this.channels.setEnabled(false);
+    connectTelevision(null);
+    const backdrop = this.add.rectangle(160, 83, 302, 83, 0x09111b, 0.93).setScrollFactor(0).setDepth(110);
+    const number = PixelFont.text(this, `LEVEL ${String(levelManager.number).padStart(2, '0')}`, Palette.warmHighlight, 1, 160, 58).setScrollFactor(0).setDepth(111);
+    const title = PixelFont.text(this, this.definition.title ?? this.definition.key, Palette.cyan, 2, 160, 81).setScrollFactor(0).setDepth(111);
+    const subtitle = PixelFont.text(this, this.definition.subtitle ?? '', Palette.silver, 1, 160, 105).setScrollFactor(0).setDepth(111);
+    this.fx.playStatic(this.definition.visuals?.accent ?? Palette.cyan);
+    this.time.delayedCall(650, () => {
+      this.completionPhase = 'playing';
+      this.player.setControlsEnabled(true);
+      this.channels.setEnabled(true);
+      connectTelevision(this.channels);
+      this.tweens.add({ targets: [backdrop, number, title, subtitle], alpha: 0, duration: 180, onComplete: () => [backdrop, number, title, subtitle].forEach(object => object.destroy()) });
+    });
   }
 
   private handleExit(): void {
@@ -188,43 +213,20 @@ export class GameScene extends Phaser.Scene {
     this.completed = true;
     this.completionPhase = 'signal';
     this.player.setControlsEnabled(false);
+    this.channels.setEnabled(false);
+    connectTelevision(null);
     this.fx.playStatic(CHANNELS[this.channels.active].visual.accent);
 
     const signal = PixelFont.text(this, 'SIGNAL RESTORED', Palette.cyan, 2, GAME_WIDTH / 2, 80)
       .setScrollFactor(0)
       .setDepth(100);
 
+    PixelFont.text(this, `LEVEL ${String(levelManager.number).padStart(2, '0')} COMPLETE`, Palette.silver, 1, 160, 103).setScrollFactor(0).setDepth(100);
+    this.time.delayedCall(850, () => this.cameras.main.fadeOut(200, 7, 11, 18));
     this.time.delayedCall(1100, () => {
       signal.destroy();
-      this.completionPhase = 'complete';
-
-      PixelFont.text(this, 'TEST CHAMBER COMPLETE', Palette.white, 1, GAME_WIDTH / 2, 80)
-        .setScrollFactor(0)
-        .setDepth(100);
-
-      const prompt = PixelFont.text(this, 'PRESS ENTER - MENU', Palette.silver, 1, GAME_WIDTH / 2, 100)
-        .setScrollFactor(0)
-        .setDepth(100);
-
-      this.tweens.add({
-        targets: prompt,
-        alpha: { from: 1, to: 0.3 },
-        duration: 600,
-        yoyo: true,
-        repeat: -1,
-      });
-
-      const keyboard = this.input.keyboard;
-
-      if (keyboard) {
-        keyboard.once('keydown-ENTER', () => {
-          this.scene.start(SceneKeys.Menu);
-        });
-      }
-
-      this.input.once('pointerdown', () => {
-        this.scene.start(SceneKeys.Menu);
-      });
+      if (levelManager.advance()) this.scene.restart();
+      else this.scene.start(SceneKeys.Ending);
     });
   }
 
@@ -232,11 +234,13 @@ export class GameScene extends Phaser.Scene {
     const body = this.player.body as Phaser.Physics.Arcade.Body;
     return {
       mode: 'game' as const, channel: this.channels.active, completed: this.completed,
+      level: levelManager.snapshot(), airSwitches: this.airSwitches, respawns: this.respawns,
       phase: this.completionPhase, x: this.player.x, y: this.player.y,
       vx: body.velocity.x, vy: body.velocity.y, grounded: body.blocked.down || body.touching.down,
       body: { width: body.width, height: body.height, offsetX: body.offset.x, offsetY: body.offset.y },
       cameraX: this.cameras.main.scrollX, fps: this.game.loop.actualFps,
       objects: this.children.length,
+      physics: { dynamic: this.physics.world.bodies.size, static: this.physics.world.staticBodies.size },
       animation: this.children.list.filter((child) => child instanceof Phaser.GameObjects.Sprite && child.texture.key === 'explorer-sheet').map((child) => {
         const sprite = child as Phaser.GameObjects.Sprite;
         return { key: sprite.anims.currentAnim?.key, frame: sprite.frame.name, x: sprite.x, y: sprite.y };

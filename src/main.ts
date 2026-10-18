@@ -3,6 +3,7 @@ import './styles/main.css';
 import { createGameConfig } from './config/GameConfig';
 import { connectTelevision, resizeDisplay, selectChannel, setPresentation } from './ui/Television';
 import type { GameScene } from './scenes/GameScene';
+import type { EndingScene } from './scenes/EndingScene';
 
 const parent = document.getElementById('game-root');
 if (!parent) throw new Error('DEAD PIXELS: missing #game-root');
@@ -25,12 +26,12 @@ window.deadPixels = {
   switchChannel: selectChannel,
   getState: () => game.scene.isActive('Game')
     ? (game.scene.getScene('Game') as GameScene).getSnapshot()
-    : { mode: 'menu' as const },
+    : game.scene.isActive('Ending') ? (game.scene.getScene('Ending') as EndingScene).getSnapshot() : { mode: 'menu' as const },
 };
 
 declare global {
   interface Window {
     __game?: Phaser.Game;
-    deadPixels: { switchChannel: typeof selectChannel; getState: () => ReturnType<GameScene['getSnapshot']> | { mode: 'menu' } };
+    deadPixels: { switchChannel: typeof selectChannel; getState: () => ReturnType<GameScene['getSnapshot']> | ReturnType<EndingScene['getSnapshot']> | { mode: 'menu' } };
   }
 }

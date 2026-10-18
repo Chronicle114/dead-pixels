@@ -14,6 +14,7 @@ export class ChannelTransition {
   private readonly flash: Phaser.GameObjects.Rectangle;
   private jitterEvent: Phaser.Time.TimerEvent | null = null;
   private instabilityEvent: Phaser.Time.TimerEvent | null = null;
+  private atmosphericIntensity = 0;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -77,10 +78,11 @@ export class ChannelTransition {
     });
   }
 
-  setInstability(channel: ChannelId): void {
+  setInstability(channel: ChannelId, atmosphere = 0): void {
     this.stopInstability();
+    this.atmosphericIntensity = atmosphere;
 
-    if (channel !== 3) {
+    if (channel !== 3 && atmosphere === 0) {
       return;
     }
 
@@ -95,7 +97,7 @@ export class ChannelTransition {
   }
 
   private scheduleInstabilityFlicker(): void {
-    const delay = Phaser.Math.Between(INSTABILITY_MIN_MS, INSTABILITY_MAX_MS);
+    const delay = Phaser.Math.Between(INSTABILITY_MIN_MS, INSTABILITY_MAX_MS) / (this.atmosphericIntensity === 2 ? 1.4 : 1);
 
     this.instabilityEvent = this.scene.time.addEvent({
       delay,

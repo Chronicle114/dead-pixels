@@ -56,6 +56,7 @@ async function run(browser, width, height) {
       await page.mouse.click(box.x + box.width / 2, box.y + box.height * 124/180);
     } else await page.keyboard.press('Enter');
     await wait(page, () => window.deadPixels.getState().mode === 'game');
+    await wait(page, () => window.deadPixels.getState().phase === 'playing');
     await wait(page, () => window.deadPixels.getState().grounded === true);
   };
 
@@ -142,12 +143,17 @@ async function run(browser, width, height) {
   await page.keyboard.down('ArrowLeft'); await page.keyboard.down('Space'); await page.waitForTimeout(200);
   await page.keyboard.up('ArrowLeft'); await page.keyboard.up('Space');
   check((await state(page)).x === exitX && (await state(page)).vy === 0, 'movement and jumping disabled during completion');
-  await wait(page, () => window.deadPixels.getState().phase === 'complete');
-  check((await state(page)).messages.includes('TEST CHAMBER COMPLETE'), 'completion message really rendered');
+  await wait(page, () => window.deadPixels.getState().messages?.includes('LEVEL 01 COMPLETE'));
+  check((await state(page)).messages.includes('LEVEL 01 COMPLETE'), 'level completion message really rendered');
   await shot('11-complete');
-  await key(page,'Enter'); check((await state(page)).mode === 'menu', 'completion returns to menu');
+  await wait(page, () => { const s=window.deadPixels.getState();return s.mode === 'game' && s.level.number === 2 && s.phase === 'playing'; });
+  check((await state(page)).level.number === 2, 'completion automatically transitions to the next level');
+  await key(page,'Escape'); check((await state(page)).mode === 'menu', 'ESC navigates back to menu after transition');
   await start(false);
   check((await state(page)).x === 28 && (await state(page)).channel === 1 && !(await state(page)).completed && await activeButton(1), 'new run resets gameplay and external channel state');
+  await walk('ArrowRight',68); await key(page,'r');
+  await wait(page, () => window.deadPixels.getState().phase === 'playing');
+  check((await state(page)).x === 28 && (await state(page)).level.checkpoint.id === 'spawn', 'R restarts current level and resets checkpoint progress');
   await page.waitForTimeout(1400);
   check((await state(page)).fps >= 50, `desktop frame rate ${(await state(page)).fps.toFixed(1)} fps`);
   check(errors.length === 0, `no browser errors: ${errors.join(';')}`);
@@ -159,7 +165,7 @@ async function run(browser, width, height) {
   const browser = await chromium.launch();
   try {
     for (const [width,height] of sizes) await run(browser,width,height);
-    fs.writeFileSync(path.join(output,'results.json'), JSON.stringify({ url:URL, sizes, passed, failed:0, fullPlaythrough:true },null,2));
-    console.log(`RESULT ${passed} passed / 0 failed; real-input full playthrough verified`);
+    fs.writeFileSync(path.join(output,'results.json'), JSON.stringify({ url:URL, sizes, passed, failed:0, scope:'regression and level 1 progression' },null,2));
+    console.log(`RESULT ${passed} passed / 0 failed; regression and level 1 progression verified`);
   } finally { await browser.close(); }
 })().catch(e => { console.error(e); process.exitCode=1; });

@@ -4,6 +4,7 @@ import { Palette } from '../config/Palette';
 import { PixelFont } from '../systems/PixelFont';
 import { ArchiveEnvironment } from '../systems/ArchiveEnvironment';
 import { connectTelevision, setPresentation } from '../ui/Television';
+import { levelManager } from '../systems/LevelManager';
 
 export class MenuScene extends Phaser.Scene {
   private starting = false;
@@ -47,6 +48,7 @@ export class MenuScene extends Phaser.Scene {
   private startGame(): void {
     if (this.starting) return;
     this.starting = true;
+    levelManager.begin();
     this.input.enabled = false;
     this.cameras.main.fadeOut(180, 7, 13, 19);
     this.time.delayedCall(180, () => this.scene.start(SceneKeys.Game));

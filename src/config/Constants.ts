@@ -9,6 +9,7 @@ export const SceneKeys = {
   Boot: 'Boot',
   Menu: 'Menu',
   Game: 'Game',
+  Ending: 'Ending',
 } as const;
 
 export type SceneKey = (typeof SceneKeys)[keyof typeof SceneKeys];

@@ -6,7 +6,8 @@ phosphor terminals and suspended cable looms. The explorer is a maintenance robo
 with a small amber scarf, ceramic helmet and cyan face. No borrowed characters.
 
 ## Pixel rules
-- Logical screen 320×180; world and collisions remain 640×180.
+- Logical screen 320×180; campaign worlds have authored widths (640–2240) and
+  retain a height of 180. The original test chamber remains 640×180.
 - Structural module 16×16. All artwork uses whole-pixel marks and nearest-neighbor
   sampling. No painted/vector art inside the game and no scaling of physics bodies.
 - Explorer sheet: uniform 16×24 cells, bottom-center pivot. A separate 8×12 carrier
@@ -35,11 +36,16 @@ inside the sheet. No scale animation on the collision carrier.
 Three preloaded channel groups, three raster layers each. Only one visible group.
 At most 12 dust motes + 6 timed signal lights; no runtime terrain generation,
 per-frame textures, expensive shaders, bloom filters or network requests.
+Campaign landmarks reuse antenna discs, tape rails, relay cores and the original
+PNG compositions. Repeatable debris excludes the old exit shrine, which is placed
+only at each level's real exit. Inactive geometry uses faint dashed rails, never
+bright solid surfaces. Checkpoints are small cyan flags with no collision body.
 Menu is a warm-grey molded receiver. During gameplay the cabinet recedes and the
 16:9 display fills the viewport using the largest fitting integer scale (fractional
 nearest-neighbor fallback on narrow phones). Scanlines <8%, mild vignette only.
 The existing ChannelTransition owns temporary interference.
 
 ## Asset provenance
-See ASSET_CREDITS.md. Keep original generation scripts outside public/. All shipped
-assets are used. Source downloads and working previews stay outside the build.
+See ASSET_CREDITS.md. Keep original generation scripts outside public/. Baseline
+artwork is retained and reused for campaign surfaces and environments. Source
+downloads and working previews stay outside the build.

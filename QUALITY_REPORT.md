@@ -1,5 +1,8 @@
 # DEAD PIXELS — Signal Archive visual integration
 
+Historical visual-stage report. For the current seven-level campaign and its
+latest verified results, see [CAMPAIGN_REPORT.md](CAMPAIGN_REPORT.md).
+
 Verified on 2026-10-17 using Chromium via Playwright, on macOS.
 
 ## Baseline and recovery
