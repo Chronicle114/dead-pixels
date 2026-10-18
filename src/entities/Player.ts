@@ -21,6 +21,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private controlsEnabled = true;
   private wasOnGround = false;
   private landUntil = 0;
+  private shuttingDown = false;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
     super(scene, x, y, AssetKeys.Carrier);
@@ -52,7 +53,17 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     if (!enabled) this.setVelocityX(0);
   }
 
+  setDamageVisual(invulnerable: boolean, dead: boolean): void {
+    this.shuttingDown = dead;
+    this.visual.setAlpha(invulnerable && Math.floor(this.scene.time.now / 110) % 2 ? 0.6 : 1);
+    if (dead) {
+      this.visual.anims.stop();
+      this.visual.setFrame(14 + Math.min(2, Math.floor(this.scene.time.now / 140) % 3)).setTint(0x263641);
+    } else this.visual.clearTint();
+  }
+
   override update(): void {
+    if (this.shuttingDown) return;
     const body = this.body as Phaser.Physics.Arcade.Body;
     const onGround = body.blocked.down || body.touching.down;
     let moving = false;

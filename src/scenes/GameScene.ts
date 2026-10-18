@@ -14,6 +14,9 @@ import { ArchiveEnvironment } from '../systems/ArchiveEnvironment';
 import { connectTelevision, setPresentation } from '../ui/Television';
 import { ChannelHud } from '../ui/ChannelHud';
 import { LevelGuidance } from '../ui/LevelGuidance';
+import { HealthSystem, type HealthEvent } from '../systems/HealthSystem';
+import { HealthHud } from '../ui/HealthHud';
+import { GameFeedback } from '../systems/GameFeedback';
 
 const FALL_THRESHOLD_Y = 170;
 const PLAYER_RECT_INSET = 1;
@@ -29,8 +32,11 @@ export class GameScene extends Phaser.Scene {
   private definition!: LevelDefinition;
   private airSwitches = 0;
   private respawns = 0;
+  private health!: HealthSystem;
+  private healthHud!: HealthHud;
+  private feedback!: GameFeedback;
   private completed = false;
-  private completionPhase: 'arrival' | 'playing' | 'signal' = 'arrival';
+  private completionPhase: 'arrival' | 'playing' | 'signal' | 'shutdown' = 'arrival';
 
   constructor() {
     super(SceneKeys.Game);
@@ -57,6 +63,9 @@ export class GameScene extends Phaser.Scene {
     this.level = buildLevel(this, data);
 
     this.player = new Player(this, data.spawn.x, data.spawn.y);
+    this.feedback = new GameFeedback(this);
+    this.health = new HealthSystem(event => this.handleDamage(event));
+    this.healthHud = new HealthHud(this);
     this.physics.add.collider(this.player, this.level.platforms);
     this.physics.add.overlap(this.player, this.level.exit, () => this.handleExit());
 
@@ -101,6 +110,9 @@ export class GameScene extends Phaser.Scene {
   }
 
   override update(): void {
+    const health = this.health.snapshot(this.time.now);
+    this.player.setDamageVisual(health.invulnerable, health.dead);
+    this.healthHud.update(health.hp);
     this.player.update();
 
     const body = this.player.body as Phaser.Physics.Arcade.Body;
@@ -112,6 +124,7 @@ export class GameScene extends Phaser.Scene {
       for (const point of this.definition.checkpoints ?? []) {
         if (Math.abs(this.player.x - point.x) < 13 && Math.abs(this.player.y - point.y) < 3 && levelManager.activate(point)) {
           this.guidance.activate(point);
+          if (this.health.healCheckpoint(point.id)) this.feedback.burst(this.player.x, this.player.y, 0x80c9ba);
         }
       }
     }
@@ -176,15 +189,39 @@ export class GameScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor(visual.background);
   }
 
-  private respawnPlayer(): void {
+  private respawnPlayer(revive = false): void {
     const target = levelManager.respawnPoint;
     if (!isSafePoint(this.definition, target, target.channel)) throw new Error('Invalid checkpoint');
     const body = this.player.body as Phaser.Physics.Arcade.Body;
     body.reset(target.x, target.y);
     this.channels.restore(target.channel);
+    body.moves = true;
+    this.player.setControlsEnabled(true);
+    if (revive) this.health.reboot(this.time.now);
+    else this.health.grantGrace(this.time.now);
+    this.completionPhase = 'playing';
+    this.channels.setEnabled(true);
+    connectTelevision(this.channels);
+    this.feedback.burst(target.x, target.y, 0x80c9ba);
     this.respawns++;
     levelManager.registerFall();
     this.fx.playRejected();
+  }
+
+  private handleDamage(event: HealthEvent): void {
+    this.feedback.burst(this.player.x, this.player.y - 4, 0xe3ab76);
+    if (!event.lethal) return;
+    this.completionPhase = 'shutdown';
+    this.player.setControlsEnabled(false);
+    this.channels.setEnabled(false);
+    connectTelevision(null);
+    const body = this.player.body as Phaser.Physics.Arcade.Body;
+    body.setVelocity(0, 0); body.moves = false;
+    this.time.delayedCall(330, () => this.cameras.main.fadeOut(120, 7, 11, 18));
+    this.time.delayedCall(500, () => {
+      this.respawnPlayer(true);
+      this.cameras.main.resetFX(); this.cameras.main.fadeIn(160, 7, 11, 18);
+    });
   }
 
   private showArrival(): void {
@@ -199,6 +236,7 @@ export class GameScene extends Phaser.Scene {
     this.time.delayedCall(650, () => {
       this.completionPhase = 'playing';
       this.player.setControlsEnabled(true);
+      this.health.setEnabled(true);
       this.channels.setEnabled(true);
       connectTelevision(this.channels);
       this.tweens.add({ targets: [backdrop, number, title, subtitle], alpha: 0, duration: 180, onComplete: () => [backdrop, number, title, subtitle].forEach(object => object.destroy()) });
@@ -211,6 +249,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.completed = true;
+    this.health.setEnabled(false);
     this.completionPhase = 'signal';
     this.player.setControlsEnabled(false);
     this.channels.setEnabled(false);
@@ -235,6 +274,7 @@ export class GameScene extends Phaser.Scene {
     return {
       mode: 'game' as const, channel: this.channels.active, completed: this.completed,
       level: levelManager.snapshot(), airSwitches: this.airSwitches, respawns: this.respawns,
+      health: this.health.snapshot(this.time.now),
       phase: this.completionPhase, x: this.player.x, y: this.player.y,
       vx: body.velocity.x, vy: body.velocity.y, grounded: body.blocked.down || body.touching.down,
       body: { width: body.width, height: body.height, offsetX: body.offset.x, offsetY: body.offset.y },
