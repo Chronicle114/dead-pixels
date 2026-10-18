@@ -8,6 +8,7 @@ export const GRAVITY_Y = 500;
 export const SceneKeys = {
   Boot: 'Boot',
   Menu: 'Menu',
+  Intro: 'Intro',
   Game: 'Game',
   Ending: 'Ending',
 } as const;

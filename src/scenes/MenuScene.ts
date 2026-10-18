@@ -122,7 +122,7 @@ export class MenuScene extends Phaser.Scene {
     if(this.starting)return;this.starting=true;
     if(continuing)levelManager.continueSaved();else levelManager.begin();
     this.input.enabled=false;this.cameras.main.fadeOut(180,7,13,19);
-    this.time.delayedCall(180,()=>this.scene.start(SceneKeys.Game));
+    this.time.delayedCall(180,()=>this.scene.start(continuing?SceneKeys.Game:SceneKeys.Intro));
   }
   getSnapshot(){return{mode:'menu' as const,screen:this.screen,selection:this.selection,canContinue:saveManager.canContinue,save:saveManager.snapshot(),messages:this.view.filter(o=>o instanceof Phaser.GameObjects.Image).map(o=>(o as Phaser.GameObjects.Image).texture.key.split(':')[1])};}
 }

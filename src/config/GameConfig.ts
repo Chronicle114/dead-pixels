@@ -3,6 +3,7 @@ import { BootScene } from '../scenes/BootScene';
 import { GameScene } from '../scenes/GameScene';
 import { MenuScene } from '../scenes/MenuScene';
 import { EndingScene } from '../scenes/EndingScene';
+import { IntroScene } from '../scenes/IntroScene';
 import { GAME_HEIGHT, GAME_WIDTH, GRAVITY_Y } from './Constants';
 import { Palette, toCss } from './Palette';
 
@@ -26,6 +27,6 @@ export function createGameConfig(parent: HTMLElement): Phaser.Types.Core.GameCon
         debug: false,
       },
     },
-    scene: [BootScene, MenuScene, GameScene, EndingScene],
+    scene: [BootScene, MenuScene, IntroScene, GameScene, EndingScene],
   };
 }

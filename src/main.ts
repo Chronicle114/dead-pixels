@@ -7,6 +7,7 @@ import type { EndingScene } from './scenes/EndingScene';
 import { audioManager } from './systems/AudioManager';
 import { saveManager } from './systems/SaveManager';
 import type { MenuScene } from './scenes/MenuScene';
+import type { IntroScene } from './scenes/IntroScene';
 
 const parent = document.getElementById('game-root');
 if (!parent) throw new Error('DEAD PIXELS: missing #game-root');
@@ -33,6 +34,7 @@ window.deadPixels = {
   getAudioState: () => audioManager.snapshot(),
   getState: () => game.scene.isActive('Game')
     ? (game.scene.getScene('Game') as GameScene).getSnapshot()
+    : game.scene.isActive('Intro') ? (game.scene.getScene('Intro') as IntroScene).getSnapshot()
     : game.scene.isActive('Ending') ? (game.scene.getScene('Ending') as EndingScene).getSnapshot()
     : game.scene.isActive('Menu') ? (game.scene.getScene('Menu') as MenuScene).getSnapshot() : {mode:'boot' as const},
 };
@@ -40,6 +42,6 @@ window.deadPixels = {
 declare global {
   interface Window {
     __game?: Phaser.Game;
-    deadPixels: { switchChannel: typeof selectChannel; getAudioState: () => ReturnType<typeof audioManager.snapshot>; getState: () => ReturnType<GameScene['getSnapshot']> | ReturnType<EndingScene['getSnapshot']> | ReturnType<MenuScene['getSnapshot']> | {mode:'boot'} };
+    deadPixels: { switchChannel: typeof selectChannel; getAudioState: () => ReturnType<typeof audioManager.snapshot>; getState: () => ReturnType<GameScene['getSnapshot']> | ReturnType<EndingScene['getSnapshot']> | ReturnType<MenuScene['getSnapshot']> | ReturnType<IntroScene['getSnapshot']> | {mode:'boot'} };
   }
 }

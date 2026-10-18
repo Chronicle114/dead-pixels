@@ -75,3 +75,11 @@ Milestones are recorded here only after their required checks actually pass.
 - Actual menu/settings/credits screenshots inspected. Fixed repeated sub-frame
   Phaser DOM events and stationary-pointer focus stealing found during QA.
 - NEW GAME still enters gameplay directly at this checkpoint; cinematic is G.
+
+## G — THE LAST SIGNAL introduction (verified)
+- Forty-second Phaser timeline: dark shared room/LED, receiver startup and terminal
+  messages, push toward the display, UNIT 07 awakening, three-signal reveal and
+  entry into FIRST SIGNAL. No video dependency or physics changes.
+- Space/Enter/ESC skip safely; Continue bypasses intro; viewed state is saved.
+- Typecheck/build pass; full timeline + three skip keys 9/9; menu QA 14/14;
+  gameplay regression 49/49. Four actual cinematic screenshots inspected.
