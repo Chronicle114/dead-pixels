@@ -245,10 +245,11 @@ async function run(browser, width, height) {
     }
     await wait(()=>window.deadPixels.getState().phase==='end');
     check((await get()).messages.includes('END OF TRANSMISSION'),'final title card');
+    check((await get()).outsideUnitVisible===true,'UNIT 07 appears outside the dark receiver in the shared room');
     await shot('ending-card');
     if (width===1280) {
       const box=await page.locator('canvas').boundingBox();
-      await page.mouse.click(box.x+box.width/2,box.y+box.height*123/180);
+      await page.mouse.click(box.x+box.width/2,box.y+box.height*164/180);
     } else await page.keyboard.press('Enter');
     await wait(()=>window.deadPixels.getState().mode==='menu');
     check((await get()).mode==='menu','full campaign returns to main menu');

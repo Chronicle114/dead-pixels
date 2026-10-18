@@ -83,3 +83,10 @@ Milestones are recorded here only after their required checks actually pass.
 - Space/Enter/ESC skip safely; Continue bypasses intro; viewed state is saved.
 - Typecheck/build pass; full timeline + three skip keys 9/9; menu QA 14/14;
   gameplay regression 49/49. Four actual cinematic screenshots inspected.
+
+## H — narrative / return to the room (verified)
+- Sparse first-checkpoint story fragments, preserved final transmission lines,
+  fade to the same room with a dark receiver and UNIT 07 outside its display.
+  Ending music, skip/replay and RETURN TO MENU are retained.
+- Typecheck/build pass; full zero-hit new-menu/intro/campaign/ending/replay route
+  307/307. Actual outside-the-receiver ending screenshot inspected.

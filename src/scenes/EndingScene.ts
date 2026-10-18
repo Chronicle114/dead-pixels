@@ -6,15 +6,18 @@ import { ChannelTransition } from '../systems/ChannelTransition';
 import { levelManager } from '../systems/LevelManager';
 import { connectTelevision, setPresentation } from '../ui/Television';
 import { audioManager } from '../systems/AudioManager';
+import { RoomBackdrop } from '../ui/RoomBackdrop';
+import { PlayerAnimations } from '../entities/Player';
 
 export class EndingScene extends Phaser.Scene {
   private stage: 'transmission' | 'waiting' | 'end' = 'transmission';
   private lines: Phaser.GameObjects.Image[] = [];
   private fx!: ChannelTransition;
+  private room: RoomBackdrop | null = null;
   constructor() { super(SceneKeys.Ending); }
 
   create(): void {
-    this.stage = 'transmission'; this.lines = [];
+    this.stage = 'transmission'; this.lines = [];this.room=null;
     audioManager.playMusic('ending');
     setPresentation('game'); connectTelevision(null);
     this.cameras.main.setBackgroundColor(0x080d14);
@@ -51,18 +54,23 @@ export class EndingScene extends Phaser.Scene {
     this.stage = 'end'; this.clearLines();
     this.cameras.main.resetFX();
     this.cameras.main.setBackgroundColor(0x000000);
-    this.write('DEAD PIXELS', 57, 0xc3ddd2, 3);
-    this.write('END OF TRANSMISSION', 85, Palette.gray);
-    const button = this.add.rectangle(160, 123, 140, 23, 0x13201f).setStrokeStyle(1, Palette.desatCyan).setInteractive({ useHandCursor: true });
-    this.write('RETURN TO MENU', 123, Palette.warmHighlight);
-    button.on('pointerdown', () => this.scene.start(SceneKeys.Menu));
+    this.room=new RoomBackdrop(this,false);
+    this.room.outside.setVisible(true).play(PlayerAnimations.Idle);
+    this.add.rectangle(160,31,306,54,0x0a111d,0.94).setStrokeStyle(1,0x426069).setDepth(90);
+    this.write('DEAD PIXELS', 22, 0xc3ddd2, 2);
+    this.write('END OF TRANSMISSION', 43, Palette.gray);
+    this.write('UNIT 07', 136, Palette.cyan,1,193);
+    const button = this.add.rectangle(160, 164, 140, 21, 0x13201f).setStrokeStyle(1, Palette.desatCyan).setInteractive({ useHandCursor: true });
+    this.write('RETURN TO MENU', 164, Palette.warmHighlight);
+    audioManager.cue('confirm');
+    button.on('pointerdown', () => {audioManager.cue('back');this.scene.start(SceneKeys.Menu);});
     button.on('pointerover', () => button.setFillStyle(0x29413c));
     button.on('pointerout', () => button.setFillStyle(0x13201f));
   }
 
-  private write(text: string, y: number, color: number, scale = 1): void {
-    this.lines.push(PixelFont.text(this, text, color, scale, 160, y).setDepth(100));
+  private write(text: string, y: number, color: number, scale = 1, x = 160): void {
+    this.lines.push(PixelFont.text(this, text, color, scale, x, y).setDepth(100));
   }
   private clearLines(): void { this.lines.forEach(line => line.destroy()); this.lines = []; }
-  getSnapshot() { return { mode: 'ending' as const, phase: this.stage, level: levelManager.snapshot(), messages: this.lines.map(line => line.texture.key.split(':')[1]) }; }
+  getSnapshot() { return { mode: 'ending' as const, phase: this.stage, level: levelManager.snapshot(), outsideUnitVisible:!!this.room?.outside.visible, messages: this.lines.map(line => line.texture.key.split(':')[1]) }; }
 }

@@ -10,6 +10,8 @@ export class LevelGuidance {
   private readonly seen = new Map<number, number>();
   private activePrompt = -1;
   private promptBegan = 0;
+  private readonly fragment: Phaser.GameObjects.Image | null;
+  private fragmentSeen = false;
 
   constructor(private readonly scene: Phaser.Scene, level: LevelDefinition, number: number, total: number) {
     PixelFont.text(scene, `${String(number).padStart(2, '0')}/${String(total).padStart(2, '0')} ${level.title}`, Palette.silver, 1, 6, 6)
@@ -27,6 +29,8 @@ export class LevelGuidance {
     };
     if (lesson[level.key]) this.prompts.unshift({from:0,to:80,image:PixelFont.text(scene,lesson[level.key],Palette.warmHighlight,1,160,38).setScrollFactor(0).setDepth(100).setVisible(false)});
     this.saved = PixelFont.text(scene, 'CHECKPOINT - SIGNAL SAVED', Palette.cyan, 1, 160, 53).setScrollFactor(0).setDepth(100).setAlpha(0);
+    const fragments:Record<string,string>={'lost-frequency':'UNKNOWN TRANSMISSION','memory-leak':'MEMORY FRAGMENT FOUND','final-transmission':'DO NOT DISCONNECT'};
+    this.fragment=fragments[level.key]?PixelFont.text(scene,fragments[level.key],Palette.warmHighlight,1,160,66).setScrollFactor(0).setDepth(100).setAlpha(0):null;
     for (const point of level.checkpoints ?? []) {
       const marker = scene.add.graphics().setDepth(9).setPosition(point.x - 12, point.y + 6);
       marker.lineStyle(1, 0x566c86);
@@ -55,6 +59,7 @@ export class LevelGuidance {
   }
 
   activate(point: CheckpointDefinition): void {
+    if(this.fragment&&!this.fragmentSeen){this.fragmentSeen=true;this.fragment.setAlpha(1);this.scene.tweens.add({targets:this.fragment,alpha:0,delay:1250,duration:650});}
     const marker = this.markers.get(point.id);
     if (marker) {
       marker.clear().lineStyle(1, 0x80c9ba).lineBetween(0, -1, 0, -20);
