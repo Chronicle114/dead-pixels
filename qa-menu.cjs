@@ -20,6 +20,9 @@ for(const [width,height] of (process.env.QA_SIZES||'1366x768').split(',').map(s=
   check((await page.evaluate(()=>window.deadPixels.getAudioState())).gains.master<.01,'mute silences actual master bus');await shot('settings');
   const mixed=await page.evaluate(()=>window.deadPixels.getAudioState());
   check(Math.abs(mixed.gains.music-mixed.preferences.music)<.01&&Math.abs(mixed.gains.sfx-mixed.preferences.sfx)<.01,'music and SFX controls change separate actual buses');
+  await page.keyboard.press('Enter');await page.keyboard.press('ArrowDown');await page.keyboard.press('Enter');
+  await page.waitForTimeout(80);
+  check(await page.evaluate(()=>getComputedStyle(document.querySelector('.crt-scanlines')).display==='none'),'CRT setting affects actual visual overlay');
   await page.keyboard.press('Enter');await page.keyboard.press('Escape');await wait(page,()=>window.deadPixels.getState().screen==='main');await clickLogical(page,240,138);
   await wait(page,()=>window.deadPixels.getState().screen==='credits');check((await state()).messages.some(m=>m.includes('KENNEY')),'credits contain real external attribution');await shot('credits');await page.keyboard.press('Escape');await wait(page,()=>window.deadPixels.getState().screen==='main');
   await startNew(page);await page.keyboard.press('Escape');await wait(page,()=>window.deadPixels.getState().mode==='menu');
@@ -36,5 +39,9 @@ for(const [width,height] of (process.env.QA_SIZES||'1366x768').split(',').map(s=
 const restricted=await browser.newPage();await restricted.addInitScript(()=>{Object.defineProperty(window,'localStorage',{get(){throw new DOMException('Blocked','SecurityError');}});});
 await restricted.goto(URL);await wait(restricted,()=>window.deadPixels?.getState().mode==='menu');check(!(await restricted.evaluate(()=>window.deadPixels.getState())).save.persistent,'blocked storage falls back safely');
 await startNew(restricted);await restricted.keyboard.press('Escape');await wait(restricted,()=>window.deadPixels.getState().mode==='menu');check((await restricted.evaluate(()=>window.deadPixels.getState())).canContinue,'in-memory continue works when storage blocked');await restricted.close();
+const quota=await browser.newPage();await quota.addInitScript(()=>{Storage.prototype.setItem=function(){throw new DOMException('Full','QuotaExceededError');};});
+await quota.goto(URL);await wait(quota,()=>window.deadPixels?.getState().mode==='menu');await startNew(quota);await quota.keyboard.press('Escape');await wait(quota,()=>window.deadPixels.getState().mode==='menu');
+check((await quota.evaluate(()=>window.deadPixels.getState())).canContinue&&!(await quota.evaluate(()=>window.deadPixels.getState())).save.persistent,'storage write failure safely retains in-memory progress');await quota.close();
+fs.writeFileSync(path.join(out,'results.json'),JSON.stringify({url:URL,passed,failed:0},null,2));
 console.log(`Menu/save/settings: ${passed} passed / 0 failed`);
 }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

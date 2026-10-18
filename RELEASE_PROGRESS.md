@@ -100,3 +100,18 @@ Milestones are recorded here only after their required checks actually pass.
 - Typecheck/build pass; health model 18/18, geometry/timing 18/18, real audio
   integration passes and browser regression 49/49. Final campaign/production and
   multi-size evidence are the remaining J checks.
+
+## J — production release verification (complete)
+- Final build/typecheck and all ten WAV integrity checks pass. A fresh production
+  preview was started on port 4183. Both full campaign modes completed at
+  1920x1080, 1366x768 and 1280x720 using real input only.
+- Final counted production checks: health 18; hazard models 18; menu/save/settings
+  42; full intro/skip 24; regression 147; zero-hit campaign 943; damage campaign
+  991. All pass, 0 failures. Audio integration also passes (not included in those
+  numbered counters). Recorded per-level rates: 58.36–60.84 FPS.
+- 324 final PNG captures; six release and six campaign boards actually inspected,
+  plus earlier full-size menu/intro/ending/hazard spot checks. No final clipping or
+  text-layout defect was found in the reviewed series.
+- Implementation/technical QA is complete. Subjective listening/mastering,
+  first-time human balance/playtime and non-Chromium testing remain unverified;
+  no claim of professional audio quality or perfect fun/balance is made.

@@ -45,6 +45,20 @@ Menu is a warm-grey molded receiver. During gameplay the cabinet recedes and the
 nearest-neighbor fallback on narrow phones). Scanlines <8%, mild vignette only.
 The existing ChannelTransition owns temporary interference.
 
+## THE LAST SIGNAL presentation
+
+UNIT 07 now has a four-segment energy readout between the level label and channel
+indicator. Mint denotes available energy; muted amber denotes critical health.
+Hazards use warm high-contrast active cores in every channel, with dark outlines,
+distinct warning states and sparse sparks. No full-screen hit shake or physics
+sprite scaling. Machinery is readable as a heavy CRT component; turret hardware
+resembles industrial relay equipment rather than modern military weapons.
+
+The menu/intro/ending share `ui/forgotten-room.png`, an original 320×180 laboratory
+room. Cinematic zoom is limited to the non-physical room container; gameplay keeps
+its pixel/physics contract. The menu title is DEAD PIXELS / THE LAST SIGNAL; no
+competition label is shown in the game menu.
+
 ## Asset provenance
 See ASSET_CREDITS.md. Keep original generation scripts outside public/. Baseline
 artwork is retained and reused for campaign surfaces and environments. Source

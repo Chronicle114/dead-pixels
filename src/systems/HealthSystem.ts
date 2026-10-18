@@ -14,6 +14,7 @@ export class HealthSystem {
   private lastSource: DamageSource | null = null;
   private lastHitAt = 0;
   private hitsBySource: Record<DamageSource,number> = {laser:0,turret:0,electric:0,machinery:0,corruption:0};
+  private recentHits:{at:number;source:DamageSource;hp:number}[]=[];
   private onHit: (event: HealthEvent) => void;
 
   constructor(onHit: (event: HealthEvent) => void = () => {}) { this.onHit = onHit; }
@@ -26,6 +27,7 @@ export class HealthSystem {
     this.invulnerableUntil = now + 1000;
     this.hits++;
     this.lastSource = source; this.lastHitAt = now; this.hitsBySource[source]++;
+    this.recentHits.push({at:now,source,hp:this.hp});if(this.recentHits.length>16)this.recentHits.shift();
     const lethal = this.hp === 0;
     if (lethal) { this.enabled = false; this.deaths++; }
     this.onHit({ hp: this.hp, source, amount, lethal });
@@ -54,6 +56,6 @@ export class HealthSystem {
   }
 
   diagnostics(now: number) {
-    return {...this.snapshot(now),lastSource:this.lastSource,lastHitAt:this.lastHitAt,hitsBySource:{...this.hitsBySource}};
+    return {...this.snapshot(now),lastSource:this.lastSource,lastHitAt:this.lastHitAt,hitsBySource:{...this.hitsBySource},recentHits:this.recentHits.map(hit=>({...hit}))};
   }
 }

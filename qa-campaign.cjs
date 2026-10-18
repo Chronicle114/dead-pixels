@@ -102,6 +102,10 @@ async function run(browser, width, height) {
   };
   const receive = async source => {
     const before=(await get()).health;
+    if(before.hitsBySource[source]===0){
+      await page.waitForFunction(source=>window.deadPixels.getState().hazards.some(h=>h.type===source&&['WARNING','CHARGING','DETECT','AIM'].includes(h.state)),source,{timeout:7000,polling:'raf'});
+      await shot(`warning-${source}`);
+    }
     await page.waitForFunction(h=>window.deadPixels.getState().health.hits>h,before.hits,{timeout:10000,polling:'raf'});
     const h=(await get()).health;
     check(h.lastSource===source && h.hp===before.hp-(source==='machinery'?2:1),`${current} actual ${source} damage amount`);
@@ -140,6 +144,8 @@ async function run(browser, width, height) {
         if (damaging) {
           await channel(1); await walk(352); await receive('laser');
           await wait(()=>window.deadPixels.getState().health.hp===1); await shot('low-hp');
+          const hits=(await get()).health.recentHits;
+          check(hits.every((hit,i)=>i===0||hit.at-hits[i-1].at>=999),'actual contact hits respect one-second invulnerability');
           await wait(()=>window.deadPixels.getState().phase==='shutdown');
           check((await get()).health.deaths===1 && (await get()).health.hp===0,'one death at zero HP'); await shot('death');
           await page.waitForFunction(n=>{const s=window.deadPixels.getState();return s.respawns>n&&s.grounded&&s.phase==='playing';},permittedFalls,{timeout:5000});
@@ -221,6 +227,7 @@ async function run(browser, width, height) {
       if([3,4,5,6,7].includes(current)) check(end.airSwitches>0,`${current} required midair switching executed`);
       if (damaging && current>1) check(end.health.hits>0 && end.health.hp>0,`${current} route remains completable after taking damage`);
       check(end.cameraX>0,`${current} camera followed the route`);
+      check(end.hazards.filter(h=>h.type==='turret').every(h=>h.projectiles.length<=3&&h.poolSize===3),`${current} projectile pools remain bounded`);
       await shot(`level-${current}-route`);
       await page.keyboard.down('ArrowRight');
       await wait(()=>window.deadPixels.getState().completed===true);

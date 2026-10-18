@@ -16,7 +16,9 @@
     "qa:hazard-models": "node qa-hazard-models.cjs",
     "qa:audio": "node qa-audio.cjs",
     "qa:menu": "node qa-menu.cjs",
-    "qa:intro": "node qa-intro.cjs"
+    "qa:intro": "node qa-intro.cjs",
+    "qa:survival": "QA_DAMAGE=1 node qa-campaign.cjs",
+    "qa:release": "npm run qa:health && npm run qa:hazard-models && npm run qa:menu && npm run qa:intro && npm run qa:audio && npm run qa"
   },
   "dependencies": {
     "phaser": "^3.90.0"

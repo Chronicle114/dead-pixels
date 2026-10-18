@@ -1,5 +1,8 @@
 # DEAD PIXELS — seven-level campaign QA report
 
+Historical campaign-stage report. Health, hazards, audio, save/Continue, the new
+menu and cinematics are documented in the current [RELEASE_REPORT.md](RELEASE_REPORT.md).
+
 ## Implemented
 
 - Data-driven `LevelManager`: current definition/index, level-local checkpoint

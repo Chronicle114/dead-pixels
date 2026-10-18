@@ -3,8 +3,9 @@ No images are synthesized; the full-resolution evidence remains alongside them.
 """
 from pathlib import Path
 from PIL import Image, ImageDraw
+import sys
 
-root=Path(__file__).resolve().parents[1]/'qa-artifacts/campaign/4173'
+root=Path(__file__).resolve().parents[1]/'qa-artifacts/campaign'/(sys.argv[1] if len(sys.argv)>1 else '4173')
 
 def compose(size, label, names):
     board=Image.new('RGB',(1536,312*((len(names)+2)//3)),'#101820')
