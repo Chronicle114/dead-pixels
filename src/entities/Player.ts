@@ -22,6 +22,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private wasOnGround = false;
   private landUntil = 0;
   private shuttingDown = false;
+  private shutdownAt = 0;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
     super(scene, x, y, AssetKeys.Carrier);
@@ -57,11 +58,12 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   }
 
   setDamageVisual(invulnerable: boolean, dead: boolean): void {
+    if(dead&&!this.shuttingDown)this.shutdownAt=this.scene.time.now;
     this.shuttingDown = dead;
     this.visual.setAlpha(invulnerable && Math.floor(this.scene.time.now / 110) % 2 ? 0.6 : 1);
     if (dead) {
       this.visual.anims.stop();
-      this.visual.setFrame(14 + Math.min(2, Math.floor(this.scene.time.now / 140) % 3)).setTint(0x263641);
+      this.visual.setFrame(16 - Math.min(2, Math.floor((this.scene.time.now-this.shutdownAt) / 140))).setTint(0x263641);
     } else this.visual.clearTint();
   }
 

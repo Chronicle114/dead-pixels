@@ -36,6 +36,8 @@ export class GameScene extends Phaser.Scene {
   private respawns = 0;
   private health!: HealthSystem;
   private lowHealthAt = 0;
+  private ambienceAt = 0;
+  private ambienceStep = 0;
   private healthHud!: HealthHud;
   private feedback!: GameFeedback;
   private hazards!: HazardSystem;
@@ -55,6 +57,7 @@ export class GameScene extends Phaser.Scene {
     this.airSwitches = 0;
     this.respawns = 0;
     this.lowHealthAt = 0;
+    this.ambienceAt = 0; this.ambienceStep = levelManager.number%3;
     audioManager.playMusic(`level-${levelManager.number}` as import('../audio/AudioManifest').MusicId);
 
     this.cameras.main.setBackgroundColor(CHANNELS[data.initialChannel].visual.background);
@@ -100,7 +103,7 @@ export class GameScene extends Phaser.Scene {
 
     const keyboard = this.input.keyboard;
 
-    const menu = () => this.scene.start(SceneKeys.Menu);
+    const menu = () => {audioManager.cue('back');this.scene.start(SceneKeys.Menu);};
     const restart = () => {
       if (this.completed) return;
       levelManager.restart();
@@ -109,7 +112,11 @@ export class GameScene extends Phaser.Scene {
     keyboard?.on('keydown-ESC', menu);
     keyboard?.on('keydown-R', restart);
     const sounds = ['footstep','jump','land'].map(name => {
-      const handler=(x:number)=>{if(this.completionPhase==='playing')audioManager.cue(name,x);};
+      const handler=(x:number)=>{
+        if(this.completionPhase!=='playing')return;
+        audioManager.cue(name,x);
+        if(name==='land')this.feedback.burst(x,this.player.y+5,0x6b8b91,3);
+      };
       this.events.on(`player-${name}`,handler);return{name,handler};
     });
 
@@ -135,6 +142,10 @@ export class GameScene extends Phaser.Scene {
     this.environment.update(this.cameras.main.scrollX);
     if (this.completionPhase !== 'playing') return;
     if(health.hp===1&&this.time.now-this.lowHealthAt>2000){this.lowHealthAt=this.time.now;audioManager.cue('low-health');}
+    if(this.time.now-this.ambienceAt>8000){
+      this.ambienceAt=this.time.now;
+      audioManager.cue(['ambient-fan','ambient-relay','ambient-signal'][this.ambienceStep++%3],this.player.x+120);
+    }
     this.hazards.update(delta);
     if (this.completionPhase !== 'playing') return;
     this.guidance.update(this.player.x);
@@ -142,6 +153,7 @@ export class GameScene extends Phaser.Scene {
       for (const point of this.definition.checkpoints ?? []) {
         if (Math.abs(this.player.x - point.x) < 13 && Math.abs(this.player.y - point.y) < 3 && levelManager.activate(point)) {
           this.guidance.activate(point);
+          this.feedback.burst(point.x,point.y,0x80c9ba,4);
           audioManager.cue('checkpoint',point.x);
           if (this.health.healCheckpoint(point.id)) this.feedback.burst(this.player.x, this.player.y, 0x80c9ba);
         }
@@ -195,6 +207,7 @@ export class GameScene extends Phaser.Scene {
     this.hud.setChannel(to);
     this.fx.setInstability(to, this.definition.visuals?.instability);
     this.fx.playStatic(CHANNELS[to].visual.accent);
+    this.feedback.burst(this.player.x,this.player.y,CHANNELS[to].visual.accent,3);
 
   }
 
@@ -272,6 +285,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.completed = true;
+    this.feedback.burst(this.definition.exit.x,this.definition.exit.y-4,0x80c9ba,8);
     audioManager.cue('complete',this.player.x);
     this.health.setEnabled(false);
     this.completionPhase = 'signal';

@@ -93,7 +93,7 @@ class AudioManager {
     const ctx=this.context;if(!ctx||ctx.state!=='running'||!this.sfxBus||this.voices>=16)return false;
     const now=ctx.currentTime;if(now-(this.lastCue.get(name)??-100)<(name==='footstep'?0.14:0.07))return false;
     this.lastCue.set(name,now);this.counts[name]=(this.counts[name]??0)+1;this.voices++;
-    const gain=ctx.createGain(),pan=ctx.createStereoPanner();pan.pan.value=Math.max(-0.7,Math.min(0.7,(x-this.listenerX)/160));gain.gain.value=0.22;gain.connect(pan);pan.connect(this.sfxBus);
+    const gain=ctx.createGain(),pan=ctx.createStereoPanner();pan.pan.value=Math.max(-0.7,Math.min(0.7,(x-this.listenerX)/160));gain.gain.value=0.22;gain.connect(pan);pan.connect(name.startsWith('ambient-')&&this.ambienceBus?this.ambienceBus:this.sfxBus);
     const tone=(f:number,to:number,duration:number,delay=0,type:OscillatorType='triangle',volume=0.25)=>{
       const osc=ctx.createOscillator(),amp=ctx.createGain();osc.type=type;osc.frequency.setValueAtTime(f,now+delay);osc.frequency.exponentialRampToValueAtTime(Math.max(20,to),now+delay+duration);
       amp.gain.setValueAtTime(0,now+delay);amp.gain.linearRampToValueAtTime(volume,now+delay+0.005);amp.gain.exponentialRampToValueAtTime(0.001,now+delay+duration);
@@ -125,6 +125,9 @@ class AudioManager {
     else if(name==='bolt-impact'){noise(0.07,0.12,1800);}
     else if(name==='room-click'){noise(0.045,0.23,500);tone(80,45,0.08,0,'sine');}
     else if(name==='signal'){noise(0.16,0.13,1400);}
+    else if(name==='ambient-fan'){noise(0.6,0.22,360);tone(72,69,0.55,0,'sine',0.09);}
+    else if(name==='ambient-relay'){noise(0.035,0.16,850);tone(90,52,0.18,0,'triangle',0.1);tone(103,73,0.16,0.25,'sine',0.07);}
+    else if(name==='ambient-signal'){noise(0.2,0.09,1700);tone(470,460,0.34,0.05,'sine',0.035);}
     else {tone(330,260,0.08,0,'triangle',0.08);}
     // Every cue envelope ends within .6s. Disconnect the shared output once.
     setTimeout(()=>{gain.disconnect();pan.disconnect();this.voices=Math.max(0,this.voices-1);},850);
@@ -136,6 +139,11 @@ class AudioManager {
     for(const [frequency,level] of [[50,0.035],[100,0.012],[151,0.006]]){
       const osc=this.context.createOscillator(),gain=this.context.createGain();osc.type='sine';osc.frequency.value=frequency;gain.gain.value=level;osc.connect(gain);gain.connect(this.ambienceBus);osc.start();
     }
+  }
+
+  destroy():void{
+    this.token++;this.active?.source.stop();this.fading?.source.stop();this.active=null;this.fading=null;
+    void this.context?.close().catch(()=>{});this.context=null;
   }
 
   snapshot(){return{state:this.context?.state??'locked',desired:this.desired,playing:this.active?.id??null,fading:this.fading?.id??null,

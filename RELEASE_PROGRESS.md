@@ -90,3 +90,13 @@ Milestones are recorded here only after their required checks actually pass.
   Ending music, skip/replay and RETURN TO MENU are retained.
 - Typecheck/build pass; full zero-hit new-menu/intro/campaign/ending/replay route
   307/307. Actual outside-the-receiver ending screenshot inspected.
+
+## I — restrained game feel (verified)
+- Shared 16-pixel pool now supports landing dust, checkpoint/health/channel/exit
+  accents and impacts. No physics resizing, knockback or screen shake added.
+- Shutdown compresses once rather than looping; fallen machinery fades into
+  non-solid debris. Spaced localized fan/relay/signal sounds use the ambience bus.
+  Audio graph closes on unload.
+- Typecheck/build pass; health model 18/18, geometry/timing 18/18, real audio
+  integration passes and browser regression 49/49. Final campaign/production and
+  multi-size evidence are the remaining J checks.

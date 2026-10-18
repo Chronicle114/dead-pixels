@@ -22,6 +22,7 @@ export class FallingMachinery extends BaseHazard {
   protected draw():void {
     const {width:w,height:h}=this.bounds;
     const x=this.bounds.x+(this.state==='WARNING'?Math.floor(this.stageAge/70)%3-1:0),y=Math.round(this.bounds.y),a=this.art.clear();
+    a.setAlpha(this.state==='IMPACT'||this.state==='COOLDOWN'?0.45:1);
     a.lineStyle(1,0x426069).lineBetween(this.definition.x+w/2,42,this.definition.x+w/2,this.definition.y);
     a.fillStyle(0x0a111d).fillRect(x,y,w,h);
     a.fillStyle(this.enabled?0x426069:0x243341).fillRect(x+1,y+1,w-2,h-2);

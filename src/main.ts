@@ -25,7 +25,7 @@ document.querySelectorAll<HTMLButtonElement>('.channel-btn').forEach((button) =>
   button.addEventListener('pointerenter',()=>audioManager.cue('hover'));
 });
 window.addEventListener('resize', () => { resizeDisplay(); game.scale.getParentBounds(); game.scale.refresh(); });
-window.addEventListener('beforeunload', () => game.destroy(true));
+window.addEventListener('beforeunload', () => {audioManager.destroy();game.destroy(true);});
 
 // Read-only diagnostics are useful in production as well as dev. No setters,
 // teleportation hooks, collision bypasses or test-specific behavior.

@@ -47,6 +47,8 @@ Source: `src/systems/AudioManager.ts`. No sample files or external dependencies.
 - Corruption: restrained dissonant tones and broken-noise envelope.
 - Low health: spaced soft warning pulse, not a constant alarm.
 - Ambient computer/ventilation hum: low-level 50/100/151Hz partials, separate bus.
+- Spaced localized fan, relay and broken-signal variations: filtered noise and
+  restrained mechanical partials, routed through the ambience volume bus.
 
 ## Quality evidence and limitation
 
