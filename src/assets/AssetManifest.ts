@@ -14,6 +14,7 @@ export const AssetKeys = {
 
 /** Explicit, local-only asset inventory. No archive or authoring source ships. */
 export function loadAssets(scene: Phaser.Scene): void {
+  scene.load.image('forgotten-room',asset('ui/forgotten-room.png'));
   scene.load.spritesheet(AssetKeys.Explorer, asset('characters/explorer.png'), { frameWidth: 16, frameHeight: 24 });
   scene.load.image(AssetKeys.Carrier, asset('characters/carrier.png'));
   scene.load.image(AssetKeys.Exit, asset('decorations/exit.png'));

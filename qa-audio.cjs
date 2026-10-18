@@ -1,4 +1,5 @@
 const {chromium}=require('playwright'),assert=require('node:assert/strict');
+const {startNew}=require('./qa-support.cjs');
 (async()=>{const browser=await chromium.launch();const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(String(e)));
 try{
   await page.goto(process.env.QA_URL||'http://localhost:5173');
@@ -7,7 +8,7 @@ try{
   await page.keyboard.press('ArrowRight');
   await page.waitForFunction(()=>window.deadPixels.getAudioState().state==='running');
   await page.waitForFunction(()=>window.deadPixels.getAudioState().playing==='menu');
-  await page.keyboard.press('Enter');await page.waitForFunction(()=>window.deadPixels.getState().phase==='playing');
+  await startNew(page);
   await page.waitForFunction(()=>window.deadPixels.getAudioState().playing==='level-1');
   await page.keyboard.down('ArrowRight');await page.waitForTimeout(450);await page.keyboard.up('ArrowRight');await page.waitForTimeout(60);
   const footsteps=await page.evaluate(()=>window.deadPixels.getAudioState().cues.footstep||0);assert.ok(footsteps>0);

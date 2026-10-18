@@ -4,6 +4,7 @@ const { chromium } = require('playwright');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const {startNew}=require('./qa-support.cjs');
 const baseURL = process.env.QA_URL || 'http://localhost:5173';
 const sizes = (process.env.QA_SIZES || '1366x768').split(',').map(s => s.split('x').map(Number));
 const damaging = process.env.QA_DAMAGE === '1';
@@ -113,7 +114,7 @@ async function run(browser, width, height) {
     await page.goto(baseURL,{waitUntil:'networkidle'});
     await wait(()=>window.deadPixels?.getState().mode==='menu');
     await shot('menu');
-    await page.keyboard.press('Enter');
+    await startNew(page);
 
     for(current=1;current<=7;current++) {
       permittedFalls=0; capturedAir=false; capturedCheckpoint=false;
@@ -251,7 +252,7 @@ async function run(browser, width, height) {
     } else await page.keyboard.press('Enter');
     await wait(()=>window.deadPixels.getState().mode==='menu');
     check((await get()).mode==='menu','full campaign returns to main menu');
-    await page.keyboard.press('Space');
+    await startNew(page);
     await wait(()=>{const s=window.deadPixels.getState();return s.mode==='game'&&s.phase==='playing';});
     check((await get()).level.number===1 && (await get()).level.cleared.length===0 && (await get()).x===28,'new campaign starts cleanly after ending');
     check(errors.length===0,`no browser errors: ${errors.join(';')}`);

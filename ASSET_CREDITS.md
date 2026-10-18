@@ -46,3 +46,11 @@ with this project. Existing project code/art licensing is not changed.
 
 Rebuild offline artwork: `python3 scripts/generate-art.py --kenney /path/to/archive.zip`.
 Pillow is only needed for authoring, not installing/building/playing the game.
+
+## The Last Signal room
+
+`public/assets/ui/forgotten-room.png`: original 320×180 pixel-art room, created by
+`scripts/generate-room.py` for the menu, introduction and ending. Includes the
+vintage receiver, old computer, storage media, bench and cables. Original project
+contribution under CC0 1.0. Existing character/world art is reused inside its
+display. This is distinct from the existing HTML/CSS exterior cabinet.

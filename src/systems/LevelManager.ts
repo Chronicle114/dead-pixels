@@ -1,6 +1,7 @@
 import { CAMPAIGN } from '../levels/Campaign';
 import type { CheckpointDefinition, LevelDefinition } from '../levels/LevelTypes';
 import { validateLevel } from '../levels/ValidateLevel';
+import { saveManager } from './SaveManager';
 
 /** In-memory campaign state; GameScene is reused for every data-defined level. */
 export class LevelManager {
@@ -26,8 +27,14 @@ export class LevelManager {
   get completed(): boolean { return this.finished; }
 
   begin(): void {
+    saveManager.begin();
     this.index = 0; this.finished = false; this.cleared = []; this.falls = 0;
     this.startedAt = Date.now(); this.restart();
+  }
+
+  continueSaved():void{
+    this.index=saveManager.savedLevel-1;this.finished=false;
+    this.cleared=this.definitions.slice(0,this.index).map(level=>level.key);this.falls=0;this.startedAt=Date.now();this.restart();
   }
 
   restart(): void {
@@ -49,8 +56,8 @@ export class LevelManager {
   /** Called only after the player's real exit overlap. Returns false at the finale. */
   advance(): boolean {
     if (!this.cleared.includes(this.current.key)) this.cleared.push(this.current.key);
-    if (this.isFinal) { this.finished = true; return false; }
-    this.index++; this.restart(); return true;
+    if (this.isFinal) { this.finished = true; saveManager.finish(); return false; }
+    this.index++; this.restart(); saveManager.setLevel(this.number); return true;
   }
 
   snapshot() {

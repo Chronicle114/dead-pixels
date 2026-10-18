@@ -4,6 +4,7 @@ const { chromium } = require('playwright');
 const fs = require('node:fs');
 const path = require('node:path');
 const assert = require('node:assert/strict');
+const {startNew,clickLogical}=require('./qa-support.cjs');
 const URL = process.env.QA_URL || 'http://localhost:5173';
 const sizes = (process.env.QA_SIZES || '1366x768').split(',').map(v => v.split('x').map(Number));
 const output = path.resolve('qa-artifacts', new globalThis.URL(URL).port || 'default');
@@ -51,10 +52,7 @@ async function run(browser, width, height) {
   };
   const activeButton = async id => Number(await page.locator('.channel-active').getAttribute('data-channel')) === id;
   const start = async click => {
-    if (click) {
-      const box = await page.locator('canvas').boundingBox();
-      await page.mouse.click(box.x + box.width / 2, box.y + box.height * 124/180);
-    } else await page.keyboard.press('Enter');
+    await startNew(page,click);
     await wait(page, () => window.deadPixels.getState().mode === 'game');
     await wait(page, () => window.deadPixels.getState().phase === 'playing');
     await wait(page, () => window.deadPixels.getState().grounded === true);
@@ -149,6 +147,11 @@ async function run(browser, width, height) {
   await wait(page, () => { const s=window.deadPixels.getState();return s.mode === 'game' && s.level.number === 2 && s.phase === 'playing'; });
   check((await state(page)).level.number === 2, 'completion automatically transitions to the next level');
   await key(page,'Escape'); check((await state(page)).mode === 'menu', 'ESC navigates back to menu after transition');
+  check((await state(page)).canContinue && (await state(page)).save.progress.current===2,'next level saved for Continue');
+  await clickLogical(page,240,94);
+  await wait(page,()=>{const s=window.deadPixels.getState();return s.mode==='game'&&s.phase==='playing';});
+  check((await state(page)).level.number===2 && (await state(page)).x===28,'Continue starts saved level at safe spawn');
+  await key(page,'Escape');
   await start(false);
   check((await state(page)).x === 28 && (await state(page)).channel === 1 && !(await state(page)).completed && await activeButton(1), 'new run resets gameplay and external channel state');
   await walk('ArrowRight',68); await key(page,'r');

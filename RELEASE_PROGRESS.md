@@ -62,3 +62,16 @@ Milestones are recorded here only after their required checks actually pass.
   including each level's correct decoded track and bounded crossfade voices.
 - No listening attachment capability exists in this harness. Subjective music
   quality/mastering is explicitly unverified; see AUDIO_CREDITS.md.
+
+## F — menu, settings and safe Continue (verified)
+- Shared original pixel-art electronics room, NEW GAME / CONTINUE / SETTINGS /
+  CREDITS, disabled no-save feedback, keyboard/pointer focus and overwrite dialog.
+  Visible competition branding removed; subtitle is THE LAST SIGNAL.
+- Versioned bounded progress/settings storage, reload persistence and safe
+  in-memory fallback when storage access is denied. Continue starts a valid level
+  spawn, never hazards/projectiles. Master/music/SFX/ambience/mute/CRT settings.
+- Typecheck/build pass; menu/storage/actual-gain QA 14/14, audio QA passes,
+  updated gameplay regression 49/49 including Continue from level 2.
+- Actual menu/settings/credits screenshots inspected. Fixed repeated sub-frame
+  Phaser DOM events and stationary-pointer focus stealing found during QA.
+- NEW GAME still enters gameplay directly at this checkpoint; cinematic is G.
