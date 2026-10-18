@@ -18,6 +18,12 @@ export function validateLevel(level: LevelDefinition): void {
   for (const cp of level.checkpoints ?? []) {
     if (!isSafePoint(level, cp, cp.channel)) throw new Error(`${level.key}: unsafe checkpoint ${cp.id}`);
   }
+  for (const hazard of level.hazards ?? []) {
+    if (hazard.x<0 || hazard.x+hazard.width>level.width || hazard.y<0 || hazard.y+hazard.height>180 || hazard.width<=0 || hazard.height<=0 || !hazard.channels.length) throw new Error(`${level.key}: invalid hazard ${hazard.id}`);
+    for (const point of [{...level.spawn,channel:level.initialChannel},...(level.checkpoints??[])]) {
+      if (hazard.channels.includes(point.channel) && point.x+3>hazard.x && point.x-3<hazard.x+hazard.width && point.y+6>hazard.y && point.y-6<hazard.y+hazard.height) throw new Error(`${level.key}: hazard overlaps safe point`);
+    }
+  }
   if (![1, 2, 3].some(ch => isSafePoint(level, { x: level.exit.x, y: level.exit.y + 2 }, ch as ChannelId))) {
     throw new Error(`${level.key}: exit has no safe support`);
   }

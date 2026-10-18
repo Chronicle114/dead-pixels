@@ -36,6 +36,10 @@ export const CAMPAIGN: readonly LevelDefinition[] = [
       hint(892, 964, 'ONE LAST VOID RELAY', 3),
     ],
     visuals: { composition: 80, machinery: 'antenna', instability: 0, accent: 0xacc2b0 },
+    hazards: [
+      { id:'security-a',type:'laser',x:350,y:108,width:4,height:56,channels:[1] },
+      { id:'security-b',type:'laser',x:716,y:108,width:4,height:56,channels:[2] },
+    ],
   },
   {
     key: 'broken-circuits', title: 'BROKEN CIRCUITS', subtitle: 'CARRY A SIGNAL THROUGH THE AIR',
@@ -52,6 +56,10 @@ export const CAMPAIGN: readonly LevelDefinition[] = [
       hint(772, 850, '3 THROUGH THE RELAY', 3), hint(850, 1008, '2 BEFORE THE LAST GAP', 2),
     ],
     visuals: { composition: 192, machinery: 'cores', instability: 0, accent: 0xa4b7da },
+    hazards: [
+      { id:'live-core',type:'electric',x:328,y:120,width:20,height:12,channels:[1] },
+      { id:'return-wire',type:'electric',x:768,y:152,width:20,height:12,channels:[2] },
+    ],
   },
   {
     key: 'memory-leak', title: 'MEMORY LEAK', subtitle: 'REMEMBER THE ORDER',
@@ -69,6 +77,7 @@ export const CAMPAIGN: readonly LevelDefinition[] = [
       hint(960, 1072, 'JUMP THEN 2', 2), hint(1240, 1320, '3 THROUGH - 1 TO FINISH'),
     ],
     visuals: { composition: 304, machinery: 'tapes', instability: 0, accent: 0xc4abd1 },
+    hazards: [{ id:'loose-monitor',type:'machinery',x:568,y:48,width:20,height:20,groundY:164,channels:[1,2] }],
   },
   {
     key: 'static-interference', title: 'STATIC INTERFERENCE', subtitle: 'TRUST THE SOLID EDGE',
@@ -85,6 +94,10 @@ export const CAMPAIGN: readonly LevelDefinition[] = [
       hint(1060, 1264, '1 - FIND THE STABLE FREQUENCY', 1), hint(1336, 1416, '3 - SILENCE THE LAST RELAY', 3),
     ],
     visuals: { composition: 416, machinery: 'broken', instability: 1, accent: 0xd3a378 },
+    hazards: [
+      { id:'archive-sentry',type:'turret',x:660,y:124,width:16,height:16,channels:[1,3],range:104,projectileSpeed:48 },
+      { id:'last-sentry',type:'turret',x:1450,y:124,width:16,height:16,channels:[1,2],range:144,projectileSpeed:48 },
+    ],
   },
   {
     key: 'system-failure', title: 'SYSTEM FAILURE', subtitle: 'KEEP THE LAST CIRCUITS ALIVE',
@@ -102,6 +115,12 @@ export const CAMPAIGN: readonly LevelDefinition[] = [
       hint(1320, 1450, 'VOID OPENS / MEMORY CARRIES'), hint(1640, 1752, '2 SOURCE - JUMP THEN 1'),
     ],
     visuals: { composition: 528, machinery: 'relays', instability: 1, accent: 0xd5977b },
+    hazards: [
+      { id:'bus-laser',type:'laser',x:660,y:108,width:4,height:56,channels:[1] },
+      { id:'loose-server',type:'machinery',x:936,y:48,width:20,height:20,groundY:164,channels:[2,3] },
+      { id:'coolant-arc',type:'electric',x:1304,y:152,width:24,height:12,channels:[1,2] },
+      { id:'bus-sentry',type:'turret',x:1500,y:124,width:16,height:16,channels:[1,3],range:104,projectileSpeed:48 },
+    ],
   },
   {
     key: 'final-transmission', title: 'FINAL TRANSMISSION', subtitle: 'SOMEONE IS STILL LISTENING',
@@ -121,5 +140,12 @@ export const CAMPAIGN: readonly LevelDefinition[] = [
       hint(2096, 2240, 'YOU ARE THE TRANSMISSION'),
     ],
     visuals: { composition: 640, machinery: 'transmitter', instability: 2, accent: 0xe1c28e },
+    hazards: [
+      { id:'final-laser',type:'laser',x:328,y:108,width:4,height:56,channels:[1] },
+      { id:'final-sentry',type:'turret',x:1060,y:124,width:16,height:16,channels:[1,3],range:104,projectileSpeed:48 },
+      { id:'final-arc',type:'electric',x:1576,y:120,width:24,height:12,channels:[2,3] },
+      { id:'last-monitor',type:'machinery',x:1920,y:48,width:20,height:20,groundY:164,channels:[1,2] },
+      { id:'waiting-signal',type:'corruption',x:2016,y:148,width:24,height:16,channels:[2,3] },
+    ],
   },
 ];

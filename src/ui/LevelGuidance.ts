@@ -20,6 +20,12 @@ export class LevelGuidance {
       image: PixelFont.text(scene, t.text, t.channel === 2 ? Palette.lavender : t.channel === 3 ? Palette.warmHighlight : Palette.silver, 1, 160, 38)
         .setScrollFactor(0).setDepth(100).setVisible(false),
     }));
+    const lesson:Record<string,string> = {
+      'lost-frequency':'LASER 1 / MEMORY HIDES YOU', 'broken-circuits':'LIVE WIRES - SWITCH SIGNAL',
+      'memory-leak':'LOOSE MACHINERY - KEEP MOVING', 'static-interference':'SENTRY CANNOT TARGET MEMORY',
+      'system-failure':'UNIT 07 - SYSTEM INTEGRITY LOW', 'final-transmission':'DO NOT DISCONNECT',
+    };
+    if (lesson[level.key]) this.prompts.unshift({from:0,to:80,image:PixelFont.text(scene,lesson[level.key],Palette.warmHighlight,1,160,38).setScrollFactor(0).setDepth(100).setVisible(false)});
     this.saved = PixelFont.text(scene, 'CHECKPOINT - SIGNAL SAVED', Palette.cyan, 1, 160, 53).setScrollFactor(0).setDepth(100).setAlpha(0);
     for (const point of level.checkpoints ?? []) {
       const marker = scene.add.graphics().setDepth(9).setPosition(point.x - 12, point.y + 6);

@@ -6,6 +6,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const baseURL = process.env.QA_URL || 'http://localhost:5173';
 const sizes = (process.env.QA_SIZES || '1366x768').split(',').map(s => s.split('x').map(Number));
+const damaging = process.env.QA_DAMAGE === '1';
 const directory = path.resolve('qa-artifacts/campaign', new URL(baseURL).port);
 fs.mkdirSync(directory, { recursive:true });
 let passed = 0;
@@ -21,12 +22,13 @@ async function run(browser, width, height) {
   const get = () => page.evaluate(() => window.deadPixels.getState());
   let current = 1, permittedFalls = 0, capturedAir = false, capturedCheckpoint = false;
   const wait = (predicate, timeout=9000) => page.waitForFunction(predicate, null, {polling:'raf',timeout});
-  const shot = async label => page.screenshot({path:path.join(directory,`${width}x${height}-${label}.png`)});
+  const shot = async label => page.screenshot({path:path.join(directory,`${width}x${height}-${damaging?'damage-':''}${label}.png`)});
   const safe = async label => {
     const s=await get();
     check(s.mode==='game' && s.level.number===current && s.phase==='playing',`${current} ${label}: current playable level`);
     check(s.respawns===permittedFalls,`${current} ${label}: no accidental pit fall`);
     check(s.body.width===6 && s.body.height===12,`${current} ${label}: unchanged physics body`);
+    if (!damaging) check(s.health.hits===0 && s.health.hp===4,`${current} ${label}: damage-free solution`);
   };
   const walk = async x => {
     const start=await get();
@@ -92,6 +94,20 @@ async function run(browser, width, height) {
     await safe('after recovery');
   };
   const relay = async (before,after,restore) => { await walk(before); await channel(3); await walk(after); if(restore) await channel(restore); };
+  const left = async x => {
+    await page.keyboard.down('ArrowLeft');
+    await page.waitForFunction(x=>window.deadPixels.getState().x<=x,x,{timeout:5000,polling:'raf'});
+    await page.keyboard.up('ArrowLeft'); await page.waitForTimeout(40);
+  };
+  const receive = async source => {
+    const before=(await get()).health;
+    await page.waitForFunction(h=>window.deadPixels.getState().health.hits>h,before.hits,{timeout:10000,polling:'raf'});
+    const h=(await get()).health;
+    check(h.lastSource===source && h.hp===before.hp-(source==='machinery'?2:1),`${current} actual ${source} damage amount`);
+    await shot(`hit-${source}`);
+    await page.waitForTimeout(200);
+    check((await get()).health.hits===h.hits,`${current} invulnerability suppresses repeat contact`);
+  };
 
   try {
     await page.goto(baseURL,{waitUntil:'networkidle'});
@@ -118,13 +134,27 @@ async function run(browser, width, height) {
         await wait(()=>window.deadPixels.getState().x<=146); await page.keyboard.up('ArrowLeft');
         await walk(328); await settle();
         check((await get()).channel===2 && (await get()).y===158 && (await get()).respawns===permittedFalls,'2 alternative lower MEMORY route is also playable');
+        if (damaging) {
+          await channel(1); await walk(352); await receive('laser');
+          await wait(()=>window.deadPixels.getState().health.hp===1); await shot('low-hp');
+          await wait(()=>window.deadPixels.getState().phase==='shutdown');
+          check((await get()).health.deaths===1 && (await get()).health.hp===0,'one death at zero HP'); await shot('death');
+          await page.waitForFunction(n=>{const s=window.deadPixels.getState();return s.respawns>n&&s.grounded&&s.phase==='playing';},permittedFalls,{timeout:5000});
+          permittedFalls++;
+          check((await get()).health.hp===4 && (await get()).health.deaths===1 && (await get()).x===328,'death restores full HP once at checkpoint');
+          await shot('reboot');
+          await walk(352); await receive('laser'); await channel(2); await left(328);
+          check((await get()).health.hp===3,'revisiting consumed checkpoint does not heal');
+        }
         await relay(390,430,2); await checkpoint(648,'antenna');
+        if (damaging) check((await get()).health.hp===4 && (await get()).health.heals===1,'new checkpoint heals exactly one HP');
         await channel(1); await checkpoint(904,'reunion');
         await relay(910,960);
       } else if(current===3) {
         await walk(110); await jump(160); await walk(176); await jump(232,2);
         await walk(264); await jump(328); await checkpoint(352,'capacitor');
         await recover(304,3); await shot(`level-${current}-midair`);
+        if (damaging) { await channel(1); await left(334); await receive('electric'); await channel(2); await walk(352); }
         await walk(462); await jump(512); await walk(528); await jump(584,1);
         await walk(616); await jump(680); await checkpoint(704,'return');
         await relay(798,848,2); await checkpoint(1040,'recovered');
@@ -135,7 +165,9 @@ async function run(browser, width, height) {
         permittedFalls=0;
         check((await get()).x===28 && (await get()).channel===1 && (await get()).level.reached.length===0 && (await get()).level.cleared.length===3,'4 R resets local progress, preserving campaign position');
         await walk(140); await channel(2); await checkpoint(304,'tape-a');
-        await relay(318,368,1); await checkpoint(592,'tape-b');
+        await relay(318,368,1);
+        if (damaging) { await walk(576); await receive('machinery'); await channel(3); }
+        await checkpoint(592,'tape-b');
         await relay(606,656,2); await checkpoint(848,'tape-c'); await channel(1);
         await walk(894); await jump(944); await walk(960); await jump(1016,2);
         await walk(1048); await jump(1112); await checkpoint(1136,'spool');
@@ -143,16 +175,26 @@ async function run(browser, width, height) {
       } else if(current===5) {
         await walk(160); await channel(1); await checkpoint(352,'stable'); await recover(320,3);
         await relay(366,416,2); await checkpoint(608,'monitor');
+        if (damaging) {
+          await channel(1); await walk(632); await receive('turret'); await channel(2); await left(608);
+          check((await get()).hazards.filter(h=>h.type==='turret').every(h=>h.projectiles.length===0),'channel deactivation clears pooled bolts');
+        }
         await walk(686); await jump(736); await walk(752); await jump(808,3);
         await walk(840); await jump(904); await checkpoint(928,'ember');
         await walk(1080); await channel(1); await checkpoint(1296,'intact');
+        if (damaging) {
+          await channel(2); await walk(1350); await page.waitForTimeout(1600);
+          check((await get()).hazards.find(h=>h.id==='last-sentry').fired===0,'solid relay wall blocks turret targeting');
+        }
         await relay(1358,1408); await checkpoint(1424,'beyond');
       } else if(current===6) {
         await walk(110); await jump(160); await walk(176); await jump(232,2);
         await walk(264); await jump(328); await checkpoint(352,'core'); await recover(304,3);
         await checkpoint(672,'relay-a'); await relay(686,736,1); await checkpoint(944,'bus');
         await walk(990); await jump(1040); await walk(1056); await jump(1112,3);
-        await walk(1144); await jump(1208); await checkpoint(1232,'relay-b'); await checkpoint(1328,'coolant');
+        await walk(1144); await jump(1208); await checkpoint(1232,'relay-b');
+        if (damaging) { await walk(1310); await channel(1); await receive('electric'); await channel(3); }
+        await checkpoint(1328,'coolant');
         await walk(1408); await channel(2); await checkpoint(1616,'lift');
         await walk(1662); await jump(1712); await walk(1728); await jump(1784,1);
         await walk(1800); await jump(1864); await checkpoint(1888,'uplink');
@@ -165,13 +207,16 @@ async function run(browser, width, height) {
         await walk(1358); await jump(1408); await walk(1424); await jump(1480,1);
         await walk(1512); await jump(1576); await checkpoint(1600,'awake');
         await walk(1712); await channel(2); await checkpoint(1936,'last-relay');
-        await relay(1950,2000,1); await checkpoint(2080,'transmitter');
+        await relay(1950,2000,damaging?undefined:1);
+        if (damaging) { await walk(2028); await receive('corruption'); await channel(1); }
+        await checkpoint(2080,'transmitter');
       }
       await safe('route complete');
       const end=await get();
       const expectedCP=[2,3,3,5,5,7,7][current-1];
       check(end.level.reached.length===expectedCP,`${current} all ${expectedCP} checkpoints reached through gameplay`);
       if([3,4,5,6,7].includes(current)) check(end.airSwitches>0,`${current} required midair switching executed`);
+      if (damaging && current>1) check(end.health.hits>0 && end.health.hp>0,`${current} route remains completable after taking damage`);
       check(end.cameraX>0,`${current} camera followed the route`);
       await shot(`level-${current}-route`);
       await page.keyboard.down('ArrowRight');
@@ -180,7 +225,7 @@ async function run(browser, width, height) {
       const cleared=await get();
       check(cleared.messages.includes('SIGNAL RESTORED'),`${current} exit reached legitimately`);
       await shot(`level-${current}-exit`);
-      results.push({viewport:`${width}x${height}`,level:current,title:end.level.title,checkpoints:end.level.reached,airSwitches:end.airSwitches,respawns:end.respawns,fps:end.fps,elapsedSeconds:end.level.elapsedSeconds});
+      results.push({viewport:`${width}x${height}`,level:current,title:end.level.title,checkpoints:end.level.reached,airSwitches:end.airSwitches,respawns:end.respawns,health:end.health,fps:end.fps,elapsedSeconds:end.level.elapsedSeconds});
     }
     await wait(()=>window.deadPixels.getState().mode==='ending');
     check((await get()).messages.includes('TRANSMISSION COMPLETE'),'final TRANSMISSION COMPLETE');
@@ -218,7 +263,7 @@ async function run(browser, width, height) {
   const browser=await chromium.launch();
   try {
     for(const [w,h] of sizes) await run(browser,w,h);
-    fs.writeFileSync(path.join(directory,'results.json'),JSON.stringify({url:baseURL,passed,failed:0,fullGamePlaythrough:true,levels:results},null,2));
+    fs.writeFileSync(path.join(directory,damaging?'damage-results.json':'results.json'),JSON.stringify({url:baseURL,passed,failed:0,fullGamePlaythrough:true,damageRun:damaging,levels:results},null,2));
     console.log(`FULL GAME PLAYTHROUGH VERIFIED: ${passed} passed / 0 failed`);
   } finally { await browser.close(); }
 })().catch(e=>{console.error(e);process.exitCode=1;});

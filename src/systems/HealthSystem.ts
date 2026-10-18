@@ -11,6 +11,9 @@ export class HealthSystem {
   private hits = 0;
   private deaths = 0;
   private heals = 0;
+  private lastSource: DamageSource | null = null;
+  private lastHitAt = 0;
+  private hitsBySource: Record<DamageSource,number> = {laser:0,turret:0,electric:0,machinery:0,corruption:0};
   private onHit: (event: HealthEvent) => void;
 
   constructor(onHit: (event: HealthEvent) => void = () => {}) { this.onHit = onHit; }
@@ -22,6 +25,7 @@ export class HealthSystem {
     this.hp = Math.max(0, this.hp - amount);
     this.invulnerableUntil = now + 1000;
     this.hits++;
+    this.lastSource = source; this.lastHitAt = now; this.hitsBySource[source]++;
     const lethal = this.hp === 0;
     if (lethal) { this.enabled = false; this.deaths++; }
     this.onHit({ hp: this.hp, source, amount, lethal });
@@ -47,5 +51,9 @@ export class HealthSystem {
     return { hp: this.hp, max: this.max, invulnerable: this.hp > 0 && now < this.invulnerableUntil,
       invulnerableMs: Math.max(0, this.invulnerableUntil - now), dead: this.hp === 0,
       hits: this.hits, deaths: this.deaths, heals: this.heals, spentCheckpoints: [...this.healed] };
+  }
+
+  diagnostics(now: number) {
+    return {...this.snapshot(now),lastSource:this.lastSource,lastHitAt:this.lastHitAt,hitsBySource:{...this.hitsBySource}};
   }
 }

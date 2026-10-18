@@ -281,7 +281,7 @@ export class GameScene extends Phaser.Scene {
     return {
       mode: 'game' as const, channel: this.channels.active, completed: this.completed,
       level: levelManager.snapshot(), airSwitches: this.airSwitches, respawns: this.respawns,
-      health: this.health.snapshot(this.time.now),
+      health: this.health.diagnostics(this.time.now),
       hazards: this.hazards.snapshot(),
       phase: this.completionPhase, x: this.player.x, y: this.player.y,
       vx: body.velocity.x, vy: body.velocity.y, grounded: body.blocked.down || body.touching.down,

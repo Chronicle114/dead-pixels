@@ -28,3 +28,17 @@ Milestones are recorded here only after their required checks actually pass.
   resets warning cycles and clears turret shots; no invisible damage remains.
 - Typecheck/build pass; actual geometry/timing model 18/18; browser regression
   47/47. Level placement and real damage/survival tests follow in C.
+
+## C — campaign hazards and balancing (verified)
+- Level 1: no damage. Level 2: two channel lasers. Level 3: two live-wire panels.
+  Level 4: falling monitor. Level 5: two industrial sentries. Level 6: four
+  separated established hazards. Level 7: five separated final security hazards.
+- Checkpoint/spawn geometry validation includes hazard bounds; original terrain
+  and movement are unchanged. Every encounter has a channel-based safe route.
+- Typecheck/build, health 18/18 and hazard models 18/18 pass. Browser regression
+  47/47; complete seven-level **zero-hit** route 298/298; intentional-damage route
+  313/313. Both reach the ending and replay through real input.
+- Real laser/electric/turret/corruption hits cost 1, machinery costs 2. Actual
+  death, one death event, low HP, reboot, healing and anti-farming were exercised.
+  Sentry wall occlusion and projectile clearing were checked. Damage/HUD/hazard
+  screenshots were actually inspected. This does not establish subjective fun.
