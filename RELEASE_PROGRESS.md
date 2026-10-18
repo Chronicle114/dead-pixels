@@ -20,3 +20,11 @@ Milestones are recorded here only after their required checks actually pass.
   regression 47/47. Full-HP HUD screenshot inspected.
 - No damaging hazards existed in this milestone; real browser hit/death testing
   belongs to B/C, not claimed as verified here.
+
+## B — hazard components (verified architecture)
+- Channel-data-driven laser, electricity, falling machinery, turret and corruption
+  components. Visible state machines, swept bolt/wall tests, three-bolt pools.
+- Hazards do not add physics bodies or modify player motion. Disabled channel
+  resets warning cycles and clears turret shots; no invisible damage remains.
+- Typecheck/build pass; actual geometry/timing model 18/18; browser regression
+  47/47. Level placement and real damage/survival tests follow in C.

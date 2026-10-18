@@ -17,6 +17,7 @@ import { LevelGuidance } from '../ui/LevelGuidance';
 import { HealthSystem, type HealthEvent } from '../systems/HealthSystem';
 import { HealthHud } from '../ui/HealthHud';
 import { GameFeedback } from '../systems/GameFeedback';
+import { HazardSystem } from '../systems/HazardSystem';
 
 const FALL_THRESHOLD_Y = 170;
 const PLAYER_RECT_INSET = 1;
@@ -35,6 +36,7 @@ export class GameScene extends Phaser.Scene {
   private health!: HealthSystem;
   private healthHud!: HealthHud;
   private feedback!: GameFeedback;
+  private hazards!: HazardSystem;
   private completed = false;
   private completionPhase: 'arrival' | 'playing' | 'signal' | 'shutdown' = 'arrival';
 
@@ -76,6 +78,9 @@ export class GameScene extends Phaser.Scene {
     this.channels = new ChannelSystem(this, data.initialChannel, {
       canSwitchTo: (target) => this.canSwitchTo(target),
     });
+    this.hazards = new HazardSystem(data.hazards ?? [], { scene: this, body: this.player.body as Phaser.Physics.Arcade.Body,
+      channel: () => this.channels.active, solids: this.level.platformList, feedback: this.feedback,
+      hit: source => this.completionPhase === 'playing' && this.health.damage(source, this.time.now), cue: () => {} });
 
     this.channels.on(ChannelEvents.Changed, (_from: ChannelId, to: ChannelId) =>
       this.handleChannelChanged(to),
@@ -109,7 +114,7 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
-  override update(): void {
+  override update(_time: number, delta: number): void {
     const health = this.health.snapshot(this.time.now);
     this.player.setDamageVisual(health.invulnerable, health.dead);
     this.healthHud.update(health.hp);
@@ -118,6 +123,8 @@ export class GameScene extends Phaser.Scene {
     const body = this.player.body as Phaser.Physics.Arcade.Body;
 
     this.environment.update(this.cameras.main.scrollX);
+    if (this.completionPhase !== 'playing') return;
+    this.hazards.update(delta);
     if (this.completionPhase !== 'playing') return;
     this.guidance.update(this.player.x);
     if (body.blocked.down || body.touching.down) {
@@ -275,6 +282,7 @@ export class GameScene extends Phaser.Scene {
       mode: 'game' as const, channel: this.channels.active, completed: this.completed,
       level: levelManager.snapshot(), airSwitches: this.airSwitches, respawns: this.respawns,
       health: this.health.snapshot(this.time.now),
+      hazards: this.hazards.snapshot(),
       phase: this.completionPhase, x: this.player.x, y: this.player.y,
       vx: body.velocity.x, vy: body.velocity.y, grounded: body.blocked.down || body.touching.down,
       body: { width: body.width, height: body.height, offsetX: body.offset.x, offsetY: body.offset.y },

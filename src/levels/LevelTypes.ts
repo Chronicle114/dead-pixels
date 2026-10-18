@@ -1,4 +1,5 @@
 import type { ChannelId } from '../config/Channels';
+import type { HazardDefinition } from '../hazards/HazardTypes';
 
 export type PlatformStyle = 'ground-top' | 'ground-fill' | 'brick' | 'memory' | 'void-crystal';
 
@@ -50,4 +51,5 @@ export interface LevelDefinition {
   checkpoints?: CheckpointDefinition[];
   tutorials?: TutorialDefinition[];
   visuals?: LevelVisuals;
+  hazards?: readonly HazardDefinition[];
 }
