@@ -59,6 +59,14 @@ existing art and the original movement/jump constants are preserved.
 
 ## Production
 
+### GitHub Pages
+
+`.github/workflows/pages.yml` builds the Vite game and deploys **dist/** after a
+push to main. In repository Settings → Pages, the source must be **GitHub Actions**.
+Publishing the repository root directly serves the uncompiled TypeScript entry
+and will not launch the game. Vite's relative base keeps scripts, styles, artwork
+and audio working under the `/dead-pixels/` project URL.
+
 ```sh
 npm run typecheck
 npm run build
