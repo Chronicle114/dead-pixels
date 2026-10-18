@@ -5,6 +5,7 @@ import { PixelFont } from '../systems/PixelFont';
 import { ArchiveEnvironment } from '../systems/ArchiveEnvironment';
 import { connectTelevision, setPresentation } from '../ui/Television';
 import { levelManager } from '../systems/LevelManager';
+import { audioManager } from '../systems/AudioManager';
 
 export class MenuScene extends Phaser.Scene {
   private starting = false;
@@ -12,6 +13,7 @@ export class MenuScene extends Phaser.Scene {
 
   create(): void {
     this.starting = false;
+    audioManager.playMusic('menu');
     this.input.enabled = true;
     setPresentation('menu');
     connectTelevision(null);
@@ -30,7 +32,7 @@ export class MenuScene extends Phaser.Scene {
     const button = this.add.rectangle(160, 124, 152, 22, 0x20383f)
       .setStrokeStyle(1, 0x80c9ba).setDepth(41).setInteractive({ useHandCursor: true });
     text('> START TRANSMISSION', Palette.warmHighlight, 1, 124);
-    button.on('pointerover', () => button.setFillStyle(0x34535a));
+    button.on('pointerover', () => { button.setFillStyle(0x34535a); audioManager.cue('hover'); });
     button.on('pointerout', () => button.setFillStyle(0x20383f));
     button.on('pointerdown', this.startGame, this);
     const prompt = text('ENTER / SPACE / CLICK', Palette.silver, 1, 145);
@@ -48,6 +50,7 @@ export class MenuScene extends Phaser.Scene {
   private startGame(): void {
     if (this.starting) return;
     this.starting = true;
+    audioManager.cue('click');
     levelManager.begin();
     this.input.enabled = false;
     this.cameras.main.fadeOut(180, 7, 13, 19);

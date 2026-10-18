@@ -18,6 +18,7 @@ import { HealthSystem, type HealthEvent } from '../systems/HealthSystem';
 import { HealthHud } from '../ui/HealthHud';
 import { GameFeedback } from '../systems/GameFeedback';
 import { HazardSystem } from '../systems/HazardSystem';
+import { audioManager } from '../systems/AudioManager';
 
 const FALL_THRESHOLD_Y = 170;
 const PLAYER_RECT_INSET = 1;
@@ -34,6 +35,7 @@ export class GameScene extends Phaser.Scene {
   private airSwitches = 0;
   private respawns = 0;
   private health!: HealthSystem;
+  private lowHealthAt = 0;
   private healthHud!: HealthHud;
   private feedback!: GameFeedback;
   private hazards!: HazardSystem;
@@ -52,6 +54,8 @@ export class GameScene extends Phaser.Scene {
     this.completionPhase = 'arrival';
     this.airSwitches = 0;
     this.respawns = 0;
+    this.lowHealthAt = 0;
+    audioManager.playMusic(`level-${levelManager.number}` as import('../audio/AudioManifest').MusicId);
 
     this.cameras.main.setBackgroundColor(CHANNELS[data.initialChannel].visual.background);
     this.cameras.main.setBounds(0, 0, data.width, data.height);
@@ -80,7 +84,7 @@ export class GameScene extends Phaser.Scene {
     });
     this.hazards = new HazardSystem(data.hazards ?? [], { scene: this, body: this.player.body as Phaser.Physics.Arcade.Body,
       channel: () => this.channels.active, solids: this.level.platformList, feedback: this.feedback,
-      hit: source => this.completionPhase === 'playing' && this.health.damage(source, this.time.now), cue: () => {} });
+      hit: source => this.completionPhase === 'playing' && this.health.damage(source, this.time.now), cue: (name,x) => { audioManager.cue(name,x); } });
 
     this.channels.on(ChannelEvents.Changed, (_from: ChannelId, to: ChannelId) =>
       this.handleChannelChanged(to),
@@ -104,6 +108,10 @@ export class GameScene extends Phaser.Scene {
     };
     keyboard?.on('keydown-ESC', menu);
     keyboard?.on('keydown-R', restart);
+    const sounds = ['footstep','jump','land'].map(name => {
+      const handler=(x:number)=>{if(this.completionPhase==='playing')audioManager.cue(name,x);};
+      this.events.on(`player-${name}`,handler);return{name,handler};
+    });
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       connectTelevision(null);
@@ -111,11 +119,13 @@ export class GameScene extends Phaser.Scene {
       this.hud.destroy();
       keyboard?.off('keydown-ESC', menu);
       keyboard?.off('keydown-R', restart);
+      sounds.forEach(({name,handler})=>this.events.off(`player-${name}`,handler));
     });
   }
 
   override update(_time: number, delta: number): void {
     const health = this.health.snapshot(this.time.now);
+    audioManager.setListenerX(this.player.x);
     this.player.setDamageVisual(health.invulnerable, health.dead);
     this.healthHud.update(health.hp);
     this.player.update();
@@ -124,6 +134,7 @@ export class GameScene extends Phaser.Scene {
 
     this.environment.update(this.cameras.main.scrollX);
     if (this.completionPhase !== 'playing') return;
+    if(health.hp===1&&this.time.now-this.lowHealthAt>2000){this.lowHealthAt=this.time.now;audioManager.cue('low-health');}
     this.hazards.update(delta);
     if (this.completionPhase !== 'playing') return;
     this.guidance.update(this.player.x);
@@ -131,6 +142,7 @@ export class GameScene extends Phaser.Scene {
       for (const point of this.definition.checkpoints ?? []) {
         if (Math.abs(this.player.x - point.x) < 13 && Math.abs(this.player.y - point.y) < 3 && levelManager.activate(point)) {
           this.guidance.activate(point);
+          audioManager.cue('checkpoint',point.x);
           if (this.health.healCheckpoint(point.id)) this.feedback.burst(this.player.x, this.player.y, 0x80c9ba);
         }
       }
@@ -175,6 +187,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private handleChannelChanged(to: ChannelId): void {
+    audioManager.cue('channel',this.player.x);
     const body = this.player.body as Phaser.Physics.Arcade.Body;
     if (this.completionPhase === 'playing' && !body.blocked.down && !body.touching.down && body.velocity.y !== 0) this.airSwitches++;
     this.level.setChannel(to);
@@ -186,6 +199,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private handleChannelRejected(): void {
+    audioManager.cue('channel-invalid',this.player.x);
     this.fx.playRejected();
     this.hud.flashNoSignal();
   }
@@ -210,12 +224,14 @@ export class GameScene extends Phaser.Scene {
     this.channels.setEnabled(true);
     connectTelevision(this.channels);
     this.feedback.burst(target.x, target.y, 0x80c9ba);
+    audioManager.cue('reboot',target.x);
     this.respawns++;
     levelManager.registerFall();
     this.fx.playRejected();
   }
 
   private handleDamage(event: HealthEvent): void {
+    audioManager.cue(event.lethal?'death':'damage',this.player.x);
     this.feedback.burst(this.player.x, this.player.y - 4, 0xe3ab76);
     if (!event.lethal) return;
     this.completionPhase = 'shutdown';
@@ -256,6 +272,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.completed = true;
+    audioManager.cue('complete',this.player.x);
     this.health.setEnabled(false);
     this.completionPhase = 'signal';
     this.player.setControlsEnabled(false);

@@ -4,10 +4,12 @@ import { createGameConfig } from './config/GameConfig';
 import { connectTelevision, resizeDisplay, selectChannel, setPresentation } from './ui/Television';
 import type { GameScene } from './scenes/GameScene';
 import type { EndingScene } from './scenes/EndingScene';
+import { audioManager } from './systems/AudioManager';
 
 const parent = document.getElementById('game-root');
 if (!parent) throw new Error('DEAD PIXELS: missing #game-root');
 setPresentation('menu');
+audioManager.installUnlock();
 const game = new Phaser.Game(createGameConfig(parent));
 if (import.meta.env.DEV) window.__game = game;
 connectTelevision(null);
@@ -16,6 +18,7 @@ document.querySelectorAll<HTMLButtonElement>('.channel-btn').forEach((button) =>
     selectChannel(Number(button.dataset.channel));
     button.blur();
   });
+  button.addEventListener('pointerenter',()=>audioManager.cue('hover'));
 });
 window.addEventListener('resize', () => { resizeDisplay(); game.scale.getParentBounds(); game.scale.refresh(); });
 window.addEventListener('beforeunload', () => game.destroy(true));
@@ -24,6 +27,7 @@ window.addEventListener('beforeunload', () => game.destroy(true));
 // teleportation hooks, collision bypasses or test-specific behavior.
 window.deadPixels = {
   switchChannel: selectChannel,
+  getAudioState: () => audioManager.snapshot(),
   getState: () => game.scene.isActive('Game')
     ? (game.scene.getScene('Game') as GameScene).getSnapshot()
     : game.scene.isActive('Ending') ? (game.scene.getScene('Ending') as EndingScene).getSnapshot() : { mode: 'menu' as const },
@@ -32,6 +36,6 @@ window.deadPixels = {
 declare global {
   interface Window {
     __game?: Phaser.Game;
-    deadPixels: { switchChannel: typeof selectChannel; getState: () => ReturnType<GameScene['getSnapshot']> | ReturnType<EndingScene['getSnapshot']> | { mode: 'menu' } };
+    deadPixels: { switchChannel: typeof selectChannel; getAudioState: () => ReturnType<typeof audioManager.snapshot>; getState: () => ReturnType<GameScene['getSnapshot']> | ReturnType<EndingScene['getSnapshot']> | { mode: 'menu' } };
   }
 }

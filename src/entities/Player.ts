@@ -40,6 +40,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     body.setSize(6, 12);
     body.setOffset(1, 0);
     body.setMaxVelocity(MOVE_SPEED, MAX_FALL_SPEED);
+    this.visual.on(Phaser.Animations.Events.ANIMATION_UPDATE, (animation:Phaser.Animations.Animation, frame:Phaser.Animations.AnimationFrame) => {
+      if(animation.key===PlayerAnimations.Walk && (frame.index===1||frame.index===4) && (body.blocked.down||body.touching.down) && Math.abs(body.velocity.x)>0) scene.events.emit('player-footstep',this.x);
+    });
     this.setCollideWorldBounds(true);
     // Sync after physics integration, including camera-follow/respawn frames.
     scene.events.on(Phaser.Scenes.Events.POST_UPDATE, this.syncVisual, this);
@@ -75,9 +78,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       if (moving) { this.setFlipX(left); this.visual.setFlipX(left); }
       const jump = Phaser.Input.Keyboard.JustDown(this.cursors.up) ||
         Phaser.Input.Keyboard.JustDown(this.keyW) || Phaser.Input.Keyboard.JustDown(this.keySpace);
-      if (jump && onGround) this.setVelocityY(JUMP_VELOCITY);
+      if (jump && onGround) { this.setVelocityY(JUMP_VELOCITY); this.scene.events.emit('player-jump',this.x); }
     }
-    if (onGround && !this.wasOnGround) this.landUntil = this.scene.time.now + 180;
+    if (onGround && !this.wasOnGround) { this.landUntil = this.scene.time.now + 180; this.scene.events.emit('player-land',this.x); }
     const next = !onGround || body.velocity.y < 0
       ? (body.velocity.y > 0 ? PlayerAnimations.Fall : PlayerAnimations.Jump)
       : this.scene.time.now < this.landUntil ? PlayerAnimations.Land

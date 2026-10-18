@@ -5,6 +5,7 @@ import { PixelFont } from '../systems/PixelFont';
 import { ChannelTransition } from '../systems/ChannelTransition';
 import { levelManager } from '../systems/LevelManager';
 import { connectTelevision, setPresentation } from '../ui/Television';
+import { audioManager } from '../systems/AudioManager';
 
 export class EndingScene extends Phaser.Scene {
   private stage: 'transmission' | 'waiting' | 'end' = 'transmission';
@@ -14,6 +15,7 @@ export class EndingScene extends Phaser.Scene {
 
   create(): void {
     this.stage = 'transmission'; this.lines = [];
+    audioManager.playMusic('ending');
     setPresentation('game'); connectTelevision(null);
     this.cameras.main.setBackgroundColor(0x080d14);
     this.fx = new ChannelTransition(this);

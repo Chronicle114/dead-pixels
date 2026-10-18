@@ -42,3 +42,13 @@ Milestones are recorded here only after their required checks actually pass.
   death, one death event, low HP, reboot, healing and anti-farming were exercised.
   Sentry wall occlusion and projectile clearing were checked. Damage/HUD/hazard
   screenshots were actually inspected. This does not establish subjective fun.
+
+## D — audio engine / effects (verified)
+- One Web Audio graph with independent master/music/SFX/ambience buses, limiter,
+  trusted-input unlock, suspended-tab handling, bounded SFX voices and music
+  crossfade infrastructure. No audio network dependency or autoplay exception.
+- Original synthesized mechanical steps, jump/land, damage/shutdown/reboot,
+  checkpoint, UI/channel and hazard cues. Steps follow grounded run frames.
+- Typecheck/build pass; real-input audio unlock/step/jump/land/channel/cleanup
+  checks pass; browser regression 47/47. Music files and listening-quality
+  review are not claimed in this milestone; soundtrack follows in E.

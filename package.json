@@ -13,7 +13,8 @@
     "qa:regression": "node qa-full.cjs",
     "qa:campaign": "node qa-campaign.cjs",
     "qa:health": "node qa-health.cjs",
-    "qa:hazard-models": "node qa-hazard-models.cjs"
+    "qa:hazard-models": "node qa-hazard-models.cjs",
+    "qa:audio": "node qa-audio.cjs"
   },
   "dependencies": {
     "phaser": "^3.90.0"

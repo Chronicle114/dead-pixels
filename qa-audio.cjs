@@ -1,0 +1,20 @@
+const {chromium}=require('playwright'),assert=require('node:assert/strict');
+(async()=>{const browser=await chromium.launch();const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(String(e)));
+try{
+  await page.goto(process.env.QA_URL||'http://localhost:5173');
+  await page.waitForFunction(()=>window.deadPixels);
+  assert.equal((await page.evaluate(()=>window.deadPixels.getAudioState())).state,'locked');
+  await page.keyboard.press('ArrowRight');
+  await page.waitForFunction(()=>window.deadPixels.getAudioState().state==='running');
+  await page.keyboard.press('Enter');await page.waitForFunction(()=>window.deadPixels.getState().phase==='playing');
+  await page.keyboard.down('ArrowRight');await page.waitForTimeout(450);await page.keyboard.up('ArrowRight');await page.waitForTimeout(60);
+  const footsteps=await page.evaluate(()=>window.deadPixels.getAudioState().cues.footstep||0);assert.ok(footsteps>0);
+  await page.waitForTimeout(350);assert.equal(await page.evaluate(()=>window.deadPixels.getAudioState().cues.footstep||0),footsteps);
+  await page.keyboard.down('Space');await page.waitForTimeout(80);await page.keyboard.up('Space');await page.waitForTimeout(300);
+  assert.equal(await page.evaluate(()=>window.deadPixels.getAudioState().cues.footstep||0),footsteps);
+  await page.waitForFunction(()=>window.deadPixels.getState().grounded);
+  await page.keyboard.press('Digit2');await page.waitForTimeout(200);
+  const a=await page.evaluate(()=>window.deadPixels.getAudioState());assert.ok(a.cues.jump>0&&a.cues.land>0&&a.cues.channel>0);assert.equal(a.error,null);
+  await page.waitForTimeout(1200);assert.equal((await page.evaluate(()=>window.deadPixels.getAudioState())).sfxVoices,0);
+  assert.equal(errors.length,0);console.log('Audio engine: trusted unlock, grounded animation footsteps, jump/land/channel cues and voice cleanup PASS');
+}finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});
