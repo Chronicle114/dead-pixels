@@ -14,6 +14,16 @@ if (!parent) throw new Error('DEAD PIXELS: missing #game-root');
 setPresentation('menu');
 audioManager.installUnlock();
 audioManager.setPreferences(saveManager.settings);
+const audioButton=document.createElement('button');audioButton.className='audio-toggle';audioButton.type='button';
+document.body.append(audioButton);
+audioButton.addEventListener('click',()=>{
+  const p=audioManager.getPreferences();
+  const enabling=p.muted||p.master===0||audioManager.snapshot().needsGesture;
+  audioManager.setPreferences(enabling?{muted:false,master:p.master||0.85,music:p.music||0.75,sfx:p.sfx||0.8}:{muted:true});
+  saveManager.setSettings(audioManager.getPreferences());void audioManager.unlock();
+});
+window.addEventListener('keydown',event=>{if(event.code==='KeyM'&&!event.repeat)audioButton.click();});
+setInterval(()=>{const s=audioManager.snapshot();audioButton.textContent=s.preferences.muted||s.preferences.master===0?'SOUND MUTED - M':s.needsGesture?'ENABLE SOUND':'SOUND ON - M';audioButton.setAttribute('aria-pressed',String(!s.preferences.muted&&!s.needsGesture));},250);
 const game = new Phaser.Game(createGameConfig(parent));
 if (import.meta.env.DEV) window.__game = game;
 connectTelevision(null);

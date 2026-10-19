@@ -24,12 +24,12 @@ export class LevelGuidance {
     }));
     const lesson:Record<string,string> = {
       'lost-frequency':'LASER 1 / MEMORY HIDES YOU', 'broken-circuits':'LIVE WIRES - SWITCH SIGNAL',
-      'memory-leak':'LOOSE MACHINERY - KEEP MOVING', 'static-interference':'SENTRY CANNOT TARGET MEMORY',
+      'memory-leak':'CRACKS WARN BEFORE COLLAPSE', 'static-interference':'SENTRY 1/2 - VOID HIDES YOU',
       'system-failure':'UNIT 07 - SYSTEM INTEGRITY LOW', 'final-transmission':'DO NOT DISCONNECT',
     };
     if (lesson[level.key]) this.prompts.unshift({from:0,to:80,image:PixelFont.text(scene,lesson[level.key],Palette.warmHighlight,1,160,38).setScrollFactor(0).setDepth(100).setVisible(false)});
     this.saved = PixelFont.text(scene, 'CHECKPOINT - SIGNAL SAVED', Palette.cyan, 1, 160, 53).setScrollFactor(0).setDepth(100).setAlpha(0);
-    const fragments:Record<string,string>={'lost-frequency':'UNKNOWN TRANSMISSION','memory-leak':'MEMORY FRAGMENT FOUND','final-transmission':'DO NOT DISCONNECT'};
+    const fragments:Record<string,string>={'lost-frequency':'UNKNOWN TRANSMISSION','memory-leak':'MEMORY RECORDING DAMAGED','final-transmission':'DO NOT DISCONNECT'};
     this.fragment=fragments[level.key]?PixelFont.text(scene,fragments[level.key],Palette.warmHighlight,1,160,66).setScrollFactor(0).setDepth(100).setAlpha(0):null;
     for (const point of level.checkpoints ?? []) {
       const marker = scene.add.graphics().setDepth(9).setPosition(point.x - 12, point.y + 6);

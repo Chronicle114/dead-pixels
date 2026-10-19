@@ -59,6 +59,22 @@ room. Cinematic zoom is limited to the non-physical room container; gameplay kee
 its pixel/physics contract. The menu title is DEAD PIXELS / THE LAST SIGNAL; no
 competition label is shown in the game menu.
 
+### Human-playtest quality pass
+
+The main menu exposes three buttons: NEW GAME / CONTINUE / SETTINGS. The 34-second
+intro animates a room dolly, CRT scan expansion, cropped terminal reveals, a close
+UNIT 07 awakening, ferrite-ring convergence and a walking entry into the level.
+The 52-second ending builds a transmitter approach, room activation/failure,
+three-tinted cropped reconstruction, white-to-point screen collapse and an
+outside-the-receiver interaction. Cinematic container zooms do not resize bodies.
+
+`SignalTransmitter` uses integer-marked Graphics and a bounded 24-pixel particle
+set; it creates no physics or per-frame textures. Fragile bridges retain their
+exact top rail and show warm jittering pixel cracks before the surface disappears.
+Recessed archive niches stay behind the actual channel rails and below gameplay
+contrast. Their MEMORY FRAGMENT feedback is placed clear of the robot; MEM n/3 is
+a small bottom-left readout. The original artwork remains the source vocabulary.
+
 ## Asset provenance
 See ASSET_CREDITS.md. Keep original generation scripts outside public/. Baseline
 artwork is retained and reused for campaign surfaces and environments. Source

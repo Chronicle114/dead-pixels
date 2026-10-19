@@ -1,6 +1,6 @@
 import { DEFAULT_AUDIO, type AudioPreferences } from './AudioManager';
 
-interface Progress { current:number; highest:number; introViewed:boolean; active:boolean }
+interface Progress { current:number; highest:number; introViewed:boolean; active:boolean; fragments:string[] }
 class SaveManager {
   private storage:Storage|null=null;
   private progress:Progress|null=null;
@@ -12,7 +12,7 @@ class SaveManager {
     if(!data||typeof data!=='object')return;
     const record=data as {version?:unknown;progress?:unknown;preferences?:unknown};if(record.version!==1)return;
     const p=record.progress as Partial<Progress>|null;
-    if(p&&Number.isInteger(p.current)&&p.current!>=1&&p.current!<=7&&Number.isInteger(p.highest)&&p.highest!>=p.current!&&p.highest!<=7&&typeof p.introViewed==='boolean'&&typeof p.active==='boolean')this.progress=p as Progress;
+    if(p&&Number.isInteger(p.current)&&p.current!>=1&&p.current!<=7&&Number.isInteger(p.highest)&&p.highest!>=p.current!&&p.highest!<=7&&typeof p.introViewed==='boolean'&&typeof p.active==='boolean')this.progress={...p as Progress,fragments:Array.isArray(p.fragments)?[...new Set(p.fragments.filter(id=>['activation','division','erasure'].includes(id)))]:[]};
     const prefs=record.preferences as Partial<AudioPreferences>|undefined;
     if(prefs){for(const key of ['master','music','sfx','ambience'] as const){const n=prefs[key];if(typeof n==='number'&&Number.isFinite(n))this.preferences[key]=Math.max(0,Math.min(1,n));}
       if(typeof prefs.muted==='boolean')this.preferences.muted=prefs.muted;if(typeof prefs.crt==='boolean')this.preferences.crt=prefs.crt;}
@@ -21,7 +21,9 @@ class SaveManager {
   get canContinue():boolean{return !!this.progress?.active;}
   get settings():AudioPreferences{return{...this.preferences};}
   get savedLevel():number{return this.progress?.current??1;}
-  begin():void{this.progress={current:1,highest:1,introViewed:false,active:true};this.persist();}
+  begin():void{this.progress={current:1,highest:1,introViewed:false,active:true,fragments:[]};this.persist();}
+  get fragments():readonly string[]{return this.progress?.fragments??[];}
+  collectFragment(id:string):boolean{if(!this.progress||this.progress.fragments.includes(id))return false;this.progress.fragments.push(id);this.persist();return true;}
   setLevel(current:number):void{if(!this.progress)this.begin();this.progress!.current=current;this.progress!.highest=Math.max(current,this.progress!.highest);this.progress!.active=true;this.persist();}
   markIntroViewed():void{if(this.progress){this.progress.introViewed=true;this.persist();}}
   finish():void{if(this.progress){this.progress.active=false;this.persist();}}

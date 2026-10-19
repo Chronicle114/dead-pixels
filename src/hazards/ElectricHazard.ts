@@ -3,7 +3,8 @@ import { cycleState } from './HazardGeometry';
 
 export class ElectricHazard extends BaseHazard {
   protected tick(): void {
-    const raw=cycleState(this.age,500,900,1000,1200);
+    const phase=cycleState(this.age,500,900,1000,1200);
+    const raw=this.rearming&&phase==='ACTIVE'?'WARNING':phase;
     const next=raw==='IDLE'?'OFF':raw==='WARNING'?'CHARGING':raw==='COOLDOWN'?'DISCHARGING':raw;
     this.setState(next, next==='CHARGING'?'electric-charge':next==='ACTIVE'?'electric-arc':next==='DISCHARGING'?'electric-off':undefined);
     if(next==='ACTIVE') this.contact();

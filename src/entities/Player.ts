@@ -95,7 +95,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.visual.setPosition(Math.round(this.x), Math.round(this.y + 6));
   }
 
-  private static ensureAnimations(scene: Phaser.Scene): void {
+  static ensureAnimations(scene: Phaser.Scene): void {
     if (scene.anims.exists(PlayerAnimations.Idle)) return;
     const sequences = [
       [PlayerAnimations.Idle, 0, 3, 4, -1], [PlayerAnimations.Walk, 4, 9, 12, -1],

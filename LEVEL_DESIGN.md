@@ -24,14 +24,14 @@ These are fixed, authored arrangements, not procedural world generation.
 | Level | Width | Checkpoints | New idea / pacing | Landmark |
 |---|---:|---:|---|---|
 | 01 FIRST SIGNAL | 640 | 2 | Safe movement/jump experimentation; MEMORY fills an 80px gap, VOID erases the relay, REALITY restores the last floor | Receiver archive |
-| 02 LOST FREQUENCY | 1056 | 3 | Choose elevated REALITY or lower MEMORY, then plan VOID passage and restore the correct bridge channel | Analog antenna |
-| 03 BROKEN CIRCUITS | 1216 | 3 | Two generous launch/landing pairs, first 1→2 and then 2→1; observation before movement | Capacitor/core bank |
-| 04 MEMORY LEAK | 1472 | 5 | Connected 2→3→1 and 3→2 sequences, then an airborne transfer and final restore | Tape rails |
-| 05 STATIC INTERFERENCE | 1536 | 5 | Begin in MEMORY, identify a REALITY bridge, then 2→3 airborne transfer; visual noise never changes solids | Broken monitors |
-| 06 SYSTEM FAILURE | 1968 | 7 | Three airborne transfers, shared refuges and alternating bridges/relays; culminates at an elevated exit | Relay bus |
-| 07 FINAL TRANSMISSION | 2240 | 7 | Combine all three signals through two airborne sections and the last gate; increasingly unstable image, stable rules | Central transmission disc |
+| 02 LOST FREQUENCY | 1056 | 3 | Coupled high REALITY / low MEMORY laser lanes; VOID removes beams and support; optional upper archive | Analog antenna |
+| 03 BROKEN CIRCUITS | 1216 | 3 | Two launch/landing transfers, first 1→2 then 2→1, with a live MEMORY landing panel requiring a second jump | Capacitor/core bank |
+| 04 MEMORY LEAK | 1472 | 5 | Fragile REALITY bridge vs stable MEMORY islands, connected relay sequences, optional VOID room and airborne transfer | Tape rails |
+| 05 STATIC INTERFERENCE | 1536 | 5 | Cover and three-shot sentry, laser/source interlock with delayed airborne retune, then 2→3 transfer | Broken monitors |
+| 06 SYSTEM FAILURE | 1968 | 7 | Fragile MEMORY vs stable REALITY islands, phased lasers, optional high MEMORY room and three airborne transfers | Relay bus |
+| 07 FINAL TRANSMISSION | 2240 | 7 | All-channel sentry with physical cover, coupled island lanes, retune-in-air source gate and fragile final transfer | Central transmission disc |
 
-Total: 98 platform definitions, 32 checkpoints, 7 real exits. The first level
+Total: 112 platform definitions, 32 checkpoints, 7 real exits. The first level
 extends the existing test chamber's identity and retains its original geometry.
 Subsequent levels teach through combinations, not faster physics or smaller bodies.
 
@@ -54,23 +54,49 @@ the collision surfaces.
 
 ## Transitions and ending
 
+NEW GAME opens a 34-second animated introduction: shared room, receiver power-on,
+push through the display, UNIT 07 awakening and walking into FIRST SIGNAL.
+Space/Enter/ESC skip safely. Continue and respawns bypass the introduction.
+
 Exit overlap locks movement and channel controls. SIGNAL RESTORED and the current
 level's completion label remain for 1.1s, with a short analog fade; the reused
 GameScene loads the next definition and stabilizes for 0.65s. Total retune to
 control return is about **1.75 seconds**. Each arrival displays LEVEL NN, title
 and a short subtitle.
 
-After exit seven, EndingScene displays TRANSMISSION COMPLETE, then THE SIGNAL WAS
-NEVER LOST. / IT WAS WAITING FOR YOU., fades to black, and shows DEAD PIXELS /
-END OF TRANSMISSION / RETURN TO MENU. The automatic sequence lasts about four
-seconds; Enter/Space can skip to the final card, and ESC returns to menu.
+After exit seven, a 52-second animated ending identifies UNIT 07 as the original
+signal. The transmitter converges; a laboratory activation/failure montage splits
+the room across REALITY / MEMORY / VOID. YOU WERE THE SIGNAL precedes a collapsing
+display, the robot appearing outside the receiver, and SIGNAL LOST → SIGNAL FOUND.
+The pullback ends at DEAD PIXELS / THE LAST SIGNAL / END OF TRANSMISSION and RETURN
+TO MENU. Space/Enter/ESC skip to the final card; another activation returns to menu.
+
+## Encounter rules and optional rooms
+
+- Laser clocks progress even in an inactive channel. Reactivation has a visible
+  350ms warning; no immediate invisible damage. Channel support and beam shape
+  are paired so neither waiting nor one universal off-channel solves every gate.
+- Turrets detect, lock a fixed aim vector, fire three bolts 240ms apart, then cool
+  down. Selected speeds are 80px/s (below movement speed); real solids block aim
+  and bolts. The final hub sentry operates in all three channels with actual cover.
+- Fragile supports on levels 4/6/7 crack and creak after standing contact, then
+  collapse after 1.05–1.2s. The real body disappears and rebuilds after 3.5s without
+  embedding the player. Switching does not reset the crack timer; R rebuilds fresh
+  geometry. Alternate-channel islands provide stable routes.
+- Three optional recessed rooms hold activation/division/erasure fragments on
+  levels 2/4/6. Reaching them requires real elevation/channel transfers. Collection
+  persists through falls, death, R and Continue; NEW GAME resets it. All three add
+  one ending line; the core identity reveal is available without them.
+- The final `heart` checkpoint is at x1296, safely beyond the x1256 cover, in
+  REALITY. This prevents the hidden flag/30FPS activation-boundary issue observed
+  during WebKit replay. All 32 checkpoint routes are exercised in production QA.
 
 ## Pacing caveat
 
 The requested **12–20 minute first-play target has not been validated with human
-playtesters**. The deterministic browser route knows every solution and reaches
-the last exit in about **155–156 seconds**, including intentional recovery tests,
-an alternate route and a restart. This is a compact campaign, not evidence of a
-12–20 minute experience. Do not describe the target duration as a measured result.
-Further first-time-player timing and difficulty tuning would be required to
-establish that duration; empty corridors or artificial waits were not added.
+playtesters**. The deterministic browser route knows every solution and includes
+recovery/restart checks, so it does not measure first-time-player duration. The
+older 155–156s route predates the redesigned encounters. This is a compact campaign;
+neither script completion nor longer cinematics establishes a 12–20 minute playtime.
+Human timing and difficulty feedback remain necessary. See QUALITY_PASS_REPORT.md
+for the final current production results and verification boundaries.

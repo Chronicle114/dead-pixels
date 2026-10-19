@@ -3,7 +3,8 @@ import { cycleState } from './HazardGeometry';
 
 export class CorruptionHazard extends BaseHazard {
   protected tick(): void {
-    const next=cycleState(this.age,600,1100,900,1300);
+    const phase=cycleState(this.age,600,1100,900,1300);
+    const next=this.rearming&&phase==='ACTIVE'?'WARNING':phase;
     this.setState(next,next==='WARNING'?'corrupt-charge':next==='ACTIVE'?'corrupt-break':undefined);
     if(next==='ACTIVE') this.contact();
   }

@@ -1,4 +1,6 @@
 :root { color-scheme: dark; --screen-width: 640px; --steel: #b5b5a5; --accent: #80c9ba; }
+.audio-toggle { position:fixed;right:12px;top:9px;z-index:1000;padding:5px 9px;border:1px solid #426069;background:#0a111de8;color:#b6c9c6;font:11px monospace;cursor:pointer; }
+.audio-toggle:hover,.audio-toggle:focus-visible { border-color:#80c9ba;outline:1px solid #80c9ba; }
 * { box-sizing: border-box; }
 html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
 body { display: grid; place-items: center; background: radial-gradient(ellipse at 50% 45%, #19252c, #080d13 65%, #05080c); color: #bcc4c1; font: 11px 'Courier New', monospace; }

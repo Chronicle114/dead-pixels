@@ -65,6 +65,7 @@ export class LevelManager {
       number: this.number, total: this.total, key: this.current.key, title: this.current.title,
       checkpoint: { ...this.checkpoint }, reached: [...this.reached], cleared: [...this.cleared],
       finished: this.finished, falls: this.falls, elapsedSeconds: Math.round((Date.now() - this.startedAt) / 1000),
+      fragments:[...saveManager.fragments],
     };
   }
 

@@ -1,7 +1,7 @@
 import { MUSIC, type MusicId } from '../audio/AudioManifest';
 
 export interface AudioPreferences { master:number; music:number; sfx:number; ambience:number; muted:boolean; crt:boolean }
-export const DEFAULT_AUDIO:AudioPreferences={master:0.7,music:0.5,sfx:0.55,ambience:0.18,muted:false,crt:true};
+export const DEFAULT_AUDIO:AudioPreferences={master:0.85,music:0.75,sfx:0.8,ambience:0.18,muted:false,crt:true};
 type MusicVoice={source:AudioBufferSourceNode;gain:GainNode;id:MusicId};
 
 /** One browser audio graph, shared across scenes; no Phaser audio duplication. */
@@ -25,29 +25,48 @@ class AudioManager {
   private history:MusicId[]=[];
   private error:string|null=null;
   private ambienceStarted=false;
+  private analyser:AnalyserNode|null=null;
+  private samples=new Float32Array(2048);
+  private needsGesture=true;
 
   installUnlock():void {
     const unlock=()=>{void this.unlock();};
     window.addEventListener('pointerdown',unlock,{capture:true});
+    window.addEventListener('touchend',unlock,{capture:true});
     window.addEventListener('keydown',unlock,{capture:true});
     document.addEventListener('visibilitychange',()=>{
       if(document.hidden)void this.context?.suspend().catch(()=>{});
-      else if(this.context)void this.context.resume().catch(()=>{});
+      else if(this.context){this.needsGesture=this.context.state!=='running';void this.unlock();}
     });
   }
 
   async unlock():Promise<void>{
     try{
       if(!this.context){
-        this.context=new AudioContext();
+        const Constructor=window.AudioContext??(window as unknown as {webkitAudioContext?:typeof AudioContext}).webkitAudioContext;
+        if(!Constructor)throw new Error('Web Audio is unavailable');
+        this.context=new Constructor({latencyHint:'interactive'});
         this.master=this.context.createGain();this.musicBus=this.context.createGain();this.sfxBus=this.context.createGain();this.ambienceBus=this.context.createGain();
         this.musicBus.connect(this.master);this.sfxBus.connect(this.master);this.ambienceBus.connect(this.master);
-        const limiter=this.context.createDynamicsCompressor();limiter.threshold.value=-16;limiter.ratio.value=4;
-        this.master.connect(limiter);limiter.connect(this.context.destination);this.applyVolumes();
+        const limiter=this.context.createDynamicsCompressor();limiter.threshold.value=-10;limiter.ratio.value=6;
+        this.analyser=this.context.createAnalyser();this.analyser.fftSize=2048;
+        this.master.connect(limiter);limiter.connect(this.analyser);this.analyser.connect(this.context.destination);this.applyVolumes();
+        this.context.onstatechange=()=>{
+          this.needsGesture=this.context?.state!=='running';
+          if(this.context?.state==='running'){this.startAmbience();if(this.desired&&this.active?.id!==this.desired)void this.startMusic(this.desired);}
+        };
       }
-      if(this.context.state!=='running')await this.context.resume();
+      if(this.context.state!=='running'){
+        // Start a real buffer synchronously inside the trusted gesture, before any
+        // await/fetch. This also wakes Safari's audio output after interruption.
+        const pulse=this.context.createBufferSource();pulse.buffer=this.context.createBuffer(1,1,this.context.sampleRate);
+        pulse.connect(this.master!);pulse.start(0);pulse.onended=()=>pulse.disconnect();
+        await this.context.resume();
+      }
+      this.needsGesture=this.context.state!=='running';
+      if(this.needsGesture)return;
       this.startAmbience();
-      if(this.desired&&!this.active)void this.startMusic(this.desired);
+      if(this.desired&&this.active?.id!==this.desired)void this.startMusic(this.desired);
     }catch(e){this.error=String(e);}
   }
 
@@ -83,17 +102,17 @@ class AudioManager {
       const now=ctx.currentTime;
       if(this.active){this.fading=this.active;this.active=null;this.fading.gain.gain.cancelScheduledValues(now);this.fading.gain.gain.setValueAtTime(this.fading.gain.gain.value,now);this.fading.gain.gain.linearRampToValueAtTime(0,now+0.65);this.fading.source.stop(now+0.7);}
       const source=ctx.createBufferSource(),gain=ctx.createGain();source.buffer=buffer;source.loop=true;source.connect(gain);gain.connect(this.musicBus);
-      gain.gain.setValueAtTime(0,now);gain.gain.linearRampToValueAtTime(0.65,now+0.65);
+      gain.gain.setValueAtTime(0,now);gain.gain.linearRampToValueAtTime(0.9,now+0.65);
       const voice={source,gain,id};source.onended=()=>{source.disconnect();gain.disconnect();if(this.fading===voice)this.fading=null;};
       this.active=voice;source.start();this.history.push(id);if(this.history.length>30)this.history.shift();
-    }catch(e){this.error=String(e);}
+    }catch(e){this.pending.delete(id);this.error=String(e);}
   }
 
   cue(name:string,x=this.listenerX):boolean{
     const ctx=this.context;if(!ctx||ctx.state!=='running'||!this.sfxBus||this.voices>=16)return false;
     const now=ctx.currentTime;if(now-(this.lastCue.get(name)??-100)<(name==='footstep'?0.14:0.07))return false;
     this.lastCue.set(name,now);this.counts[name]=(this.counts[name]??0)+1;this.voices++;
-    const gain=ctx.createGain(),pan=ctx.createStereoPanner();pan.pan.value=Math.max(-0.7,Math.min(0.7,(x-this.listenerX)/160));gain.gain.value=0.22;gain.connect(pan);pan.connect(name.startsWith('ambient-')&&this.ambienceBus?this.ambienceBus:this.sfxBus);
+    const gain=ctx.createGain(),pan=ctx.createStereoPanner();pan.pan.value=Math.max(-0.7,Math.min(0.7,(x-this.listenerX)/160));gain.gain.value=name.startsWith('ambient-')?0.22:0.65;gain.connect(pan);pan.connect(name.startsWith('ambient-')&&this.ambienceBus?this.ambienceBus:this.sfxBus);
     const tone=(f:number,to:number,duration:number,delay=0,type:OscillatorType='triangle',volume=0.25)=>{
       const osc=ctx.createOscillator(),amp=ctx.createGain();osc.type=type;osc.frequency.setValueAtTime(f,now+delay);osc.frequency.exponentialRampToValueAtTime(Math.max(20,to),now+delay+duration);
       amp.gain.setValueAtTime(0,now+delay);amp.gain.linearRampToValueAtTime(volume,now+delay+0.005);amp.gain.exponentialRampToValueAtTime(0.001,now+delay+duration);
@@ -146,7 +165,10 @@ class AudioManager {
     void this.context?.close().catch(()=>{});this.context=null;
   }
 
-  snapshot(){return{state:this.context?.state??'locked',desired:this.desired,playing:this.active?.id??null,fading:this.fading?.id??null,
+  snapshot(){
+    let rms=0,peak=0;
+    if(this.analyser){this.analyser.getFloatTimeDomainData(this.samples);for(const sample of this.samples){rms+=sample*sample;peak=Math.max(peak,Math.abs(sample));}rms=Math.sqrt(rms/this.samples.length);}
+    return{state:this.context?.state??'locked',needsGesture:this.needsGesture,output:{rms,peak,dbfs:rms?20*Math.log10(rms):-120},desired:this.desired,playing:this.active?.id??null,fading:this.fading?.id??null,
     musicVoices:Number(!!this.active)+Number(!!this.fading),sfxVoices:this.voices,preferences:this.getPreferences(),
     gains:{master:this.master?.gain.value??0,music:this.musicBus?.gain.value??0,sfx:this.sfxBus?.gain.value??0,ambience:this.ambienceBus?.gain.value??0},
     cues:{...this.counts},history:[...this.history],decoded:this.buffers.size,error:this.error};}

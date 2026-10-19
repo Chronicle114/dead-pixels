@@ -54,6 +54,18 @@ Source: `src/systems/AudioManager.ts`. No sample files or external dependencies.
 
 File existence, unique arrangements, decode/playback, gain routing and loop edges
 are machine-verifiable. They do **not** prove professional musical quality.
-This harness has no audio-listening attachment tool; subjective listening/mastering
-review has not been performed and is not claimed. Playback is intentionally quiet
-and limited, but the soundtrack still merits human audition on speakers/headphones.
+
+The human-playtest quality pass removes Phaser's unused second audio context,
+improves gesture/resume handling, increases the mix/effect gains with a limiter and
+adds a persistent sound indicator/M toggle. User-saved mute/volume choices remain
+respected. Complete silence in the user's particular Safari profile was not
+reproduced, so no device-specific root cause is claimed.
+
+`qa-audio-output.cjs` now records real post-master Chromium and WebKit PCM during
+first-click NEW GAME, gameplay, effects-only and mute. Both engines produce
+nonzero music/effects and zero muted output, using a single context. Captures are
+saved in `qa-artifacts/audio-output/`, not copied from the original score files.
+
+Physical speaker output and subjective listening/mastering remain unverified.
+The recordings can be auditioned locally; see [AUDIO_LISTENING.md](AUDIO_LISTENING.md)
+and [QUALITY_PASS_REPORT.md](QUALITY_PASS_REPORT.md) for the exact check/results.

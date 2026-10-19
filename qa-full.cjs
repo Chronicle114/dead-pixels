@@ -148,7 +148,7 @@ async function run(browser, width, height) {
   check((await state(page)).level.number === 2, 'completion automatically transitions to the next level');
   await key(page,'Escape'); check((await state(page)).mode === 'menu', 'ESC navigates back to menu after transition');
   check((await state(page)).canContinue && (await state(page)).save.progress.current===2,'next level saved for Continue');
-  await clickLogical(page,240,94);
+  await clickLogical(page,240,102);
   await wait(page,()=>{const s=window.deadPixels.getState();return s.mode==='game'&&s.phase==='playing';});
   check((await state(page)).level.number===2 && (await state(page)).x===28,'Continue starts saved level at safe spawn');
   await key(page,'Escape');

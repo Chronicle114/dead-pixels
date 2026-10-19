@@ -3,7 +3,8 @@ import { cycleState } from './HazardGeometry';
 
 export class LaserHazard extends BaseHazard {
   protected tick(): void {
-    const next = cycleState(this.age, 350, 800, 1200, 1500);
+    const cycle = cycleState(this.age+(this.definition.phaseMs??0), 350, 800, this.definition.activeMs??1800, 1500);
+    const next=this.rearming&&cycle==='ACTIVE'?'WARNING':cycle;
     this.setState(next, next === 'WARNING' ? 'laser-warning' : next === 'ACTIVE' ? 'laser-on' : next === 'COOLDOWN' ? 'laser-off' : undefined);
     if (next === 'ACTIVE') this.contact();
   }

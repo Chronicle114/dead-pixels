@@ -1,5 +1,8 @@
 # DEAD PIXELS — THE LAST SIGNAL
 
+Historical expanded-release report. The newer human-playtest-driven changes and
+current verification boundaries are in [QUALITY_PASS_REPORT.md](QUALITY_PASS_REPORT.md).
+
 ## Delivered scope
 
 The existing seven-level Phaser 3 game now includes channel-aware security,

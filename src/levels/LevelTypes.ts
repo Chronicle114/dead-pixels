@@ -11,6 +11,7 @@ export interface PlatformDefinition {
   height: number;
   style: PlatformStyle;
   channels?: readonly ChannelId[];
+  fragile?: { collapseMs:number; resetMs:number };
 }
 
 export interface SpawnPoint {
@@ -38,6 +39,8 @@ export interface LevelVisuals {
   accent: number;
 }
 
+export interface SecretDefinition { id:string; x:number; y:number; channel:ChannelId; memory:string }
+
 export interface LevelDefinition {
   key: string;
   title?: string;
@@ -52,4 +55,5 @@ export interface LevelDefinition {
   tutorials?: TutorialDefinition[];
   visuals?: LevelVisuals;
   hazards?: readonly HazardDefinition[];
+  secrets?: readonly SecretDefinition[];
 }

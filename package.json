@@ -18,7 +18,9 @@
     "qa:menu": "node qa-menu.cjs",
     "qa:intro": "node qa-intro.cjs",
     "qa:survival": "QA_DAMAGE=1 node qa-campaign.cjs",
-    "qa:release": "npm run qa:health && npm run qa:hazard-models && npm run qa:menu && npm run qa:intro && npm run qa:audio && npm run qa"
+    "qa:release": "npm run qa:health && npm run qa:hazard-models && npm run qa:menu && npm run qa:intro && npm run qa:audio && npm run qa",
+    "qa:audio-output": "node qa-audio-output.cjs",
+    "qa:quality": "QA_FRAGILE=1 QA_SECRETS=1 node qa-campaign.cjs"
   },
   "dependencies": {
     "phaser": "^3.90.0"

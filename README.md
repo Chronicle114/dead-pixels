@@ -5,7 +5,8 @@
 A broken signal. Three realities. A seven-level Phaser 3 puzzle-platformer for
 Ludum Dare 60 — **OLD TECH**.
 
-Current systems and verified results: [RELEASE_REPORT.md](RELEASE_REPORT.md).
+Current human-playtest quality pass: [QUALITY_PASS_REPORT.md](QUALITY_PASS_REPORT.md).
+Previous expanded-release report: [RELEASE_REPORT.md](RELEASE_REPORT.md).
 
 ## Run
 
@@ -19,8 +20,10 @@ Open http://localhost:5173. All game artwork and fonts load locally.
 Controls: **A/D** or arrows move; **Space/W/Up** jump; **1/2/3** select
 REALITY/MEMORY/VOID; **Q/E** cycle; **R** restart current level; **ESC** menu;
 **Enter/Space/click** select; arrows navigate menus. The new main menu offers
-NEW GAME, CONTINUE, SETTINGS and CREDITS. NEW GAME plays THE LAST SIGNAL, a
-40-second introduction; **Space/Enter/ESC** skip it safely.
+NEW GAME, CONTINUE and SETTINGS. NEW GAME plays THE LAST SIGNAL, a
+34-second animated introduction; **Space/Enter/ESC** skip it safely.
+The upper-right sound badge or **M** toggles/activates audio. Safari listening
+instructions and actual browser recordings: [AUDIO_LISTENING.md](AUDIO_LISTENING.md).
 The cabinet buttons route through the same collision-validated ChannelSystem.
 
 Route: select MEMORY before the first gap; cross its bridge; approach the tall
@@ -51,7 +54,13 @@ arrangements load locally; audio source/license details: [AUDIO_CREDITS.md](AUDI
 4. MEMORY LEAK — channel sequences and loose falling machinery.
 5. STATIC INTERFERENCE — predictable industrial sentries and interference.
 6. SYSTEM FAILURE — airborne transfers, bridges and separated security systems.
-7. FINAL TRANSMISSION — final security chamber, corruption and a short ending.
+7. FINAL TRANSMISSION — cover, coupled signal lanes, the last source gate and the identity reveal.
+
+The quality pass adds coupled laser lanes, cover-based three-shot turrets,
+fragile supports with stable alternate-channel islands and three optional memory
+rooms on levels 2/4/6. Damage and movement physics remain unchanged. The ending is
+now a 52-second skippable animated reveal of UNIT 07's identity, reconstruction,
+escape and final receiver interaction. Essential story does not require secrets.
 
 Exits automatically retune the next level in about 1.75 seconds. Checkpoint flags
 glow cyan when activated. Short contextual hints explain the next idea. All
@@ -70,10 +79,10 @@ and audio working under the `/dead-pixels/` project URL.
 ```sh
 npm run typecheck
 npm run build
-npm run preview -- --port 4173 --strictPort
+npm run preview -- --port 4193 --strictPort
 ```
 
-Open http://localhost:4173. Logical resolution remains 320×180, with crisp integer
+Open http://localhost:4193. Logical resolution remains 320×180, with crisp integer
 scaling on desktop. The large cabinet is reserved for the menu; gameplay uses a
 thin screen surround and compact physical channel strip.
 
@@ -94,7 +103,7 @@ npm run qa
 With the production preview running:
 
 ```sh
-QA_URL=http://localhost:4173 QA_SIZES=1920x1080,1366x768,1280x720 npm run qa
+QA_URL=http://localhost:4193 QA_SIZES=1920x1080,1366x768,1280x720 npm run qa
 ```
 
 `npm run qa` runs both the updated existing regression suite (`qa-full.cjs`) and
@@ -118,20 +127,37 @@ Deliberate damage/death/healing and survival through all seven levels:
 npm run qa:survival
 ```
 
-For example, with a production preview on port 4183:
+Additional quality tests:
 
 ```sh
-QA_URL=http://localhost:4183 QA_SIZES=1920x1080,1366x768,1280x720 npm run qa:release
-QA_URL=http://localhost:4183 QA_SIZES=1920x1080,1366x768,1280x720 npm run qa:survival
+npm run qa:quality
+npm run qa:audio-output
 ```
 
-Regression outputs: `qa-artifacts/5173/` and `qa-artifacts/4173/`.
-Campaign outputs: `qa-artifacts/campaign/5173/` and
-`qa-artifacts/campaign/4173/`. Each has screenshots and `results.json`.
-These are local QA outputs, not build assets. Optional visual review boards:
-`python3 scripts/review-campaign.py` (requires Pillow).
+`QA_BROWSER=webkit npm run qa:quality` also plays the entire campaign through the
+WebKit engine. Install it with `npx playwright install webkit` if necessary.
+These commands default to the dev server; set `QA_URL` to use a production preview.
+For the current preview on port 4193:
 
-The final expanded-release evidence uses port **4183**. See
+```sh
+QA_URL=http://localhost:4193 QA_SIZES=1920x1080,1366x768,1280x720 npm run qa:release
+QA_URL=http://localhost:4193 npm run qa:survival
+QA_URL=http://localhost:4193 npm run qa:quality
+QA_URL=http://localhost:4193 QA_BROWSER=webkit npm run qa:quality
+QA_URL=http://localhost:4193 QA_BROWSER=webkit npm run qa:intro
+QA_URL=http://localhost:4193 npm run qa:audio-output
+```
+
+Current regression outputs: `qa-artifacts/4193/`. Campaign outputs:
+`qa-artifacts/quality/campaign/4193-chromium/` and `4193-webkit/`, with separate
+normal, damage and secrets result files/screenshots. Intro captures are under
+`qa-artifacts/quality/intro/`; browser-captured WAVs are under
+`qa-artifacts/audio-output/`. These are local QA outputs, not build assets.
+Rebuild review boards with `python3 scripts/review-quality.py` (requires Pillow)
+and the machine summary with `python3 scripts/summarize-quality.py` after all
+listed suites have passed. The quality scripts use the port-4193 evidence paths.
+
+Historical expanded-release evidence uses port **4183**. See
 `qa-artifacts/campaign/4183/`, `qa-artifacts/menu/`, `qa-artifacts/intro/` and
 `qa-artifacts/release-review/`. Rebuild final boards with
 `python3 scripts/review-campaign.py 4183` and
@@ -142,7 +168,9 @@ The final expanded-release evidence uses port **4183**. See
 - [Art bible](ART_BIBLE.md)
 - [Asset credits / licenses](ASSET_CREDITS.md)
 - [Campaign design](LEVEL_DESIGN.md)
-- [Current release report](RELEASE_REPORT.md)
+- [Current quality-pass report](QUALITY_PASS_REPORT.md)
+- [Safari listening / recorded-output check](AUDIO_LISTENING.md)
+- [Previous release report](RELEASE_REPORT.md)
 - [Audio credits](AUDIO_CREDITS.md)
 - [Milestone verification log](RELEASE_PROGRESS.md)
 - [Previous campaign QA report](CAMPAIGN_REPORT.md)

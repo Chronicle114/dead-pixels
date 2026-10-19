@@ -5,7 +5,7 @@ async function clickLogical(page,x,y){
   const b=await page.locator('canvas').boundingBox();await page.mouse.click(b.x+b.width*x/320,b.y+b.height*y/180);
 }
 async function startNew(page,click=false){
-  if(click)await clickLogical(page,240,72);else await page.keyboard.press('Enter');
+  if(click)await clickLogical(page,240,76);else await page.keyboard.press('Enter');
   await wait(page,()=>{const s=window.deadPixels.getState();return s.mode!=='menu'||s.screen==='confirm';});
   let s=await page.evaluate(()=>window.deadPixels.getState());
   if(s.mode==='menu'&&s.screen==='confirm'){

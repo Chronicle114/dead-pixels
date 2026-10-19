@@ -1,5 +1,8 @@
 # THE LAST SIGNAL — development checkpoints
 
+Milestones A–J below describe the earlier expanded release. The current
+human-playtest quality pass is recorded in K and QUALITY_PASS_REPORT.md.
+
 ## Baseline
 - Git checkpoint `2e4b27d` preserves the working seven-level campaign.
 - `npm run typecheck` / `npm run build`: pass.
@@ -115,3 +118,26 @@ Milestones are recorded here only after their required checks actually pass.
 - Implementation/technical QA is complete. Subjective listening/mastering,
   first-time human balance/playtime and non-Chromium testing remain unverified;
   no claim of professional audio quality or perfect fun/balance is made.
+
+## K — human-playtest quality pass (implementation and technical checks verified)
+- Baseline tag `quality-pass-baseline-20261018` preserves `c6023a5`. Real player
+  feedback drove changes to silence recovery, cinematic motion and encounter design.
+- One output AudioContext, Safari gesture/resume recovery, revised gain staging,
+  retryable decoding and a visible sound/M toggle. Actual Chromium/WebKit PCM
+  recordings prove nonzero music/effects and zero mute; hardware listening remains
+  unverified. The exact original user-profile silence was not reproduced.
+- Three-button menu; animated 34-second intro and 52-second identity/reconstruction/
+  escape/receiver ending. Skip/replay and the essential reveal without secrets work.
+- Persistent phased laser clocks, predictable three-shot sentries with real cover,
+  fragile warning/collapse/rebuild on levels 4/6/7, and three saved optional archive
+  rooms. Total112 platform definitions,32 checkpoints,7 exits; physics/HP unchanged.
+- Final production4193 checks: models36; menu42; Chromiumintro24/WebKitintro10;
+  regression147; normal3sizecampaign1069; damage371; Chromiumsecrets/fragile385;
+  WebKitsecrets/fragile385. **2,433 browser assertions +36 model assertions,0failed**;
+  audio integration/PCM checks also pass outside the numeric total.
+- All eight regenerated visual boards inspected. Fixed the upper-room popup overlap,
+  relative cinematic timing and the covered/30FPS-boundary final heart checkpoint.
+- Chromium ~60FPS; WebKit ~30FPS on this LowPowerMode host, also reproduced with an
+  empty page. No claim of 60FPS WebKit or human validation of fun/playtime/listening.
+- Checked build: `dist/assets/index-Bqesysth.js`. Quality-pass verification completed
+  locally before the final upload; publication uses the existing Pages workflow on main.

@@ -11,6 +11,10 @@ export interface BuiltPlatform {
   definition: PlatformDefinition;
   active: boolean;
   ghost?: Phaser.GameObjects.Graphics;
+  collapsed:boolean;
+  crackedAt:number|null;
+  resetAt:number;
+  cracks?:Phaser.GameObjects.Graphics;
 }
 
 export interface BuiltLevel {
@@ -18,6 +22,7 @@ export interface BuiltLevel {
   platformList: readonly BuiltPlatform[];
   exit: Phaser.GameObjects.Sprite;
   setChannel(channel: ChannelId): void;
+  updateFragile(body:Phaser.Physics.Arcade.Body,now:number):void;
 }
 
 export function buildLevel(scene: Phaser.Scene, level: LevelDefinition): BuiltLevel {
@@ -45,7 +50,8 @@ export function buildLevel(scene: Phaser.Scene, level: LevelDefinition): BuiltLe
       ghost.lineBetween(definition.x, definition.y, definition.x, definition.y + 3);
       ghost.lineBetween(definition.x + definition.width - 1, definition.y, definition.x + definition.width - 1, definition.y + 3);
     }
-    builtList.push({ tile, definition, active: true, ghost });
+    const cracks=definition.fragile?scene.add.graphics().setDepth(11):undefined;
+    builtList.push({ tile, definition, active: true, ghost,collapsed:false,crackedAt:null,resetAt:0,cracks });
   }
 
   const exit = scene.add.sprite(level.exit.x, level.exit.y, TextureKeys.ExitBars);
@@ -65,9 +71,11 @@ export function buildLevel(scene: Phaser.Scene, level: LevelDefinition): BuiltLe
     repeat: -1,
   });
 
+  let currentChannel:ChannelId=level.initialChannel;
   const setChannel = (channel: ChannelId): void => {
+    currentChannel=channel;
     for (const item of builtList) {
-      const shouldActivate = isPlatformActiveIn(item.definition.channels, channel);
+      const shouldActivate = !item.collapsed&&isPlatformActiveIn(item.definition.channels, channel);
 
       if (shouldActivate === item.active) {
         continue;
@@ -80,7 +88,27 @@ export function buildLevel(scene: Phaser.Scene, level: LevelDefinition): BuiltLe
     }
   };
 
-  return { platforms, platformList: builtList, exit, setChannel };
+  const updateFragile=(body:Phaser.Physics.Arcade.Body,now:number)=>{
+    for(const item of builtList){
+      const config=item.definition.fragile;if(!config)continue;
+      const p=item.definition;
+      if(item.active&&item.crackedAt===null&&(body.blocked.down||body.touching.down)&&Math.abs(body.bottom-p.y)<2&&body.right>p.x&&body.x<p.x+p.width){item.crackedAt=now;scene.events.emit('fragile-warning',p.x);}
+      item.cracks?.clear();
+      if(item.crackedAt!==null&&!item.collapsed){
+        const progress=(now-item.crackedAt)/config.collapseMs;
+        if(item.active&&item.cracks){
+          item.cracks.lineStyle(1,progress>.7?0xe3ab76:0x92616a);
+          for(let x=7;x<p.width;x+=16)if(progress>(x%4)*.12)item.cracks.lineBetween(p.x+x,p.y+2,p.x+x-3+(Math.floor(now/80)%2),p.y+9).lineBetween(p.x+x-3,p.y+9,p.x+x+2,p.y+14);
+        }
+        if(progress>=1){item.collapsed=true;item.resetAt=now+config.resetMs;item.cracks?.clear();scene.events.emit('fragile-collapse',p.x);setChannel(currentChannel);}
+      }
+      if(item.collapsed&&now>=item.resetAt&&!(body.x<p.x+p.width&&body.right>p.x&&body.y<p.y+p.height&&body.bottom>p.y)){
+        item.collapsed=false;item.crackedAt=null;setChannel(currentChannel);
+      }
+    }
+  };
+
+  return { platforms, platformList: builtList, exit, setChannel,updateFragile };
 }
 
 /** Recompose the shipped art for arbitrary authored geometry, once per size/style.

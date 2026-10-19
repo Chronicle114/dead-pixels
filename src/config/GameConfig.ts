@@ -16,6 +16,9 @@ export function createGameConfig(parent: HTMLElement): Phaser.Types.Core.GameCon
     backgroundColor: toCss(Palette.black),
     pixelArt: true,
     roundPixels: true,
+    // AudioManager owns the only output graph; do not create a silent second
+    // Phaser context that competes for Safari's gesture/interruption lifecycle.
+    audio: { noAudio: true },
     scale: {
       mode: Phaser.Scale.FIT,
       autoCenter: Phaser.Scale.CENTER_BOTH,

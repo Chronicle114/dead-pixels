@@ -19,6 +19,7 @@ import { HealthHud } from '../ui/HealthHud';
 import { GameFeedback } from '../systems/GameFeedback';
 import { HazardSystem } from '../systems/HazardSystem';
 import { audioManager } from '../systems/AudioManager';
+import { SecretSystem } from '../systems/SecretSystem';
 
 const FALL_THRESHOLD_Y = 170;
 const PLAYER_RECT_INSET = 1;
@@ -41,6 +42,7 @@ export class GameScene extends Phaser.Scene {
   private healthHud!: HealthHud;
   private feedback!: GameFeedback;
   private hazards!: HazardSystem;
+  private secrets!: SecretSystem;
   private completed = false;
   private completionPhase: 'arrival' | 'playing' | 'signal' | 'shutdown' = 'arrival';
 
@@ -75,6 +77,7 @@ export class GameScene extends Phaser.Scene {
     this.feedback = new GameFeedback(this);
     this.health = new HealthSystem(event => this.handleDamage(event));
     this.healthHud = new HealthHud(this);
+    this.secrets = new SecretSystem(this,data.secrets??[],this.feedback);
     this.physics.add.collider(this.player, this.level.platforms);
     this.physics.add.overlap(this.player, this.level.exit, () => this.handleExit());
 
@@ -119,6 +122,9 @@ export class GameScene extends Phaser.Scene {
       };
       this.events.on(`player-${name}`,handler);return{name,handler};
     });
+    const fragileWarning=(x:number)=>audioManager.cue('metal-creak',x);
+    const fragileCollapse=(x:number)=>{audioManager.cue('metal-impact',x);this.feedback.burst(x,this.player.y+6,0xd3a378,6);};
+    this.events.on('fragile-warning',fragileWarning);this.events.on('fragile-collapse',fragileCollapse);
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       connectTelevision(null);
@@ -127,6 +133,7 @@ export class GameScene extends Phaser.Scene {
       keyboard?.off('keydown-ESC', menu);
       keyboard?.off('keydown-R', restart);
       sounds.forEach(({name,handler})=>this.events.off(`player-${name}`,handler));
+      this.events.off('fragile-warning',fragileWarning);this.events.off('fragile-collapse',fragileCollapse);
     });
   }
 
@@ -147,8 +154,10 @@ export class GameScene extends Phaser.Scene {
       audioManager.cue(['ambient-fan','ambient-relay','ambient-signal'][this.ambienceStep++%3],this.player.x+120);
     }
     this.hazards.update(delta);
+    this.level.updateFragile(body,this.time.now);
     if (this.completionPhase !== 'playing') return;
     this.guidance.update(this.player.x);
+    this.secrets.update(this.player.x,this.player.y,this.channels.active);
     if (body.blocked.down || body.touching.down) {
       for (const point of this.definition.checkpoints ?? []) {
         if (Math.abs(this.player.x - point.x) < 13 && Math.abs(this.player.y - point.y) < 3 && levelManager.activate(point)) {
@@ -178,6 +187,7 @@ export class GameScene extends Phaser.Scene {
       if (item.active) {
         continue;
       }
+      if(item.collapsed)continue;
 
       if (!isPlatformActiveIn(item.definition.channels, target)) {
         continue;
@@ -314,6 +324,7 @@ export class GameScene extends Phaser.Scene {
       level: levelManager.snapshot(), airSwitches: this.airSwitches, respawns: this.respawns,
       health: this.health.diagnostics(this.time.now),
       hazards: this.hazards.snapshot(),
+      secrets:this.secrets.snapshot(),
       phase: this.completionPhase, x: this.player.x, y: this.player.y,
       vx: body.velocity.x, vy: body.velocity.y, grounded: body.blocked.down || body.touching.down,
       body: { width: body.width, height: body.height, offsetX: body.offset.x, offsetY: body.offset.y },
@@ -326,7 +337,7 @@ export class GameScene extends Phaser.Scene {
       })[0],
       messages: this.children.list.filter((child) => child instanceof Phaser.GameObjects.Image && child.visible && child.alpha > 0 && child.texture.key.startsWith('pixel-font:')).map((child) => (child as Phaser.GameObjects.Image).texture.key.split(':')[1]),
       noSignal: this.children.list.some((child) => child instanceof Phaser.GameObjects.Image && child.texture.key.startsWith('pixel-font:NO SIGNAL') && child.alpha > 0),
-      platforms: this.level.platformList.map(({ definition, active, tile }) => ({ ...definition, active, enabled: (tile.body as Phaser.Physics.Arcade.StaticBody).enable })),
+      platforms: this.level.platformList.map(({ definition, active, tile,collapsed,crackedAt }) => ({ ...definition, active,collapsed,cracking:crackedAt!==null&&!collapsed, enabled: (tile.body as Phaser.Physics.Arcade.StaticBody).enable })),
     };
   }
 }

@@ -9,15 +9,17 @@ export abstract class BaseHazard {
   protected enabled = false;
   protected readonly bounds: Box;
   protected impacts = 0;
+  private arming=0;
   constructor(readonly definition: HazardDefinition, protected readonly ctx: HazardContext) {
     this.art = ctx.scene.add.graphics().setDepth(16);
     this.bounds = { x: definition.x, y: definition.y, width: definition.width, height: definition.height };
   }
   update(delta: number): void {
-    const enabled = this.definition.channels.includes(this.ctx.channel());
-    if (!enabled) { this.enabled = false; this.age = 0; this.state = 'DISABLED'; this.onDisabled(); this.draw(); return; }
-    if (!this.enabled) { this.age = 0; this.state = 'IDLE'; this.enabled = true; }
     this.age += Math.min(delta, 50);
+    const enabled = this.definition.channels.includes(this.ctx.channel());
+    if (!enabled) { this.enabled = false; this.state = 'DISABLED'; this.onDisabled(); this.draw(); return; }
+    if (!this.enabled) { this.state = 'IDLE'; this.enabled = true;this.arming=350; }
+    this.arming=Math.max(0,this.arming-Math.min(delta,50));
     this.tick(Math.min(delta, 50));
     this.draw();
   }
@@ -27,10 +29,12 @@ export abstract class BaseHazard {
     if (cue) this.ctx.cue(cue, this.definition.x);
   }
   protected contact(): void {
+    if(this.arming>0)return;
     if (intersects(this.bounds, this.ctx.body) && this.ctx.hit(this.definition.type)) this.impacts++;
   }
   protected onDisabled(): void {}
+  protected get rearming():boolean{return this.arming>0;}
   protected abstract tick(delta: number): void;
   protected abstract draw(): void;
-  snapshot() { return { ...this.definition, state: this.state, enabled: this.enabled, dangerous: this.state === 'ACTIVE' || this.state === 'FALLING', bounds: { ...this.bounds }, impacts: this.impacts }; }
+  snapshot() { return { ...this.definition, state: this.state, enabled: this.enabled,clockMs:Math.round(this.age), dangerous: this.state === 'ACTIVE' || this.state === 'FALLING', bounds: { ...this.bounds }, impacts: this.impacts }; }
 }

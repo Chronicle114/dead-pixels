@@ -12,6 +12,9 @@ export interface HazardDefinition {
   groundY?: number;
   range?: number;
   projectileSpeed?: number;
+  phaseMs?: number;
+  activeMs?: number;
+  burst?: number;
 }
 export interface Box { x: number; y: number; width: number; height: number }
 export interface HazardContext {

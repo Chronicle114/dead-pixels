@@ -7,7 +7,7 @@ import { levelManager } from '../systems/LevelManager';
 import { saveManager } from '../systems/SaveManager';
 import { audioManager,type AudioPreferences } from '../systems/AudioManager';
 
-type Screen='main'|'settings'|'credits'|'confirm';
+type Screen='main'|'settings'|'confirm';
 export class MenuScene extends Phaser.Scene {
   private starting=false;
   private screen:Screen='main';
@@ -56,9 +56,9 @@ export class MenuScene extends Phaser.Scene {
     this.view.forEach(o=>o.destroy());this.view=[];this.buttons=[];
     if(this.screen==='main'){
       this.panel(160,25,308,43);this.text('DEAD PIXELS',160,18,0xc3ddd2,2);this.text('THE LAST SIGNAL',160,38,0xd3a378);
-      this.panel(240,105,144,101);
-      ['NEW GAME','CONTINUE','SETTINGS','CREDITS'].forEach((label,i)=>this.button(label,240,72+i*22,130,i,()=>this.choose(i),i===1&&!saveManager.canContinue));
-      this.text(saveManager.canContinue?`SAVED SIGNAL ${String(saveManager.savedLevel).padStart(2,'0')}`:'NO SAVED SIGNAL',240,160,0x6b8b91);
+      this.panel(240,103,144,90);
+      ['NEW GAME','CONTINUE','SETTINGS'].forEach((label,i)=>this.button(label,240,76+i*26,130,i,()=>this.choose(i),i===1&&!saveManager.canContinue));
+      this.text(saveManager.canContinue?`SAVED SIGNAL ${String(saveManager.savedLevel).padStart(2,'0')}`:'NO SAVED SIGNAL',240,159,0x6b8b91);
       this.text('ARROWS / ENTER SELECT',160,174,0x6b8b91);
     }else if(this.screen==='settings'){
       this.panel(160,90,304,174);this.text('SETTINGS',160,16,0xc3ddd2,2);
@@ -74,10 +74,6 @@ export class MenuScene extends Phaser.Scene {
       this.button(`MUTE AUDIO ${settings.muted?'ON':'OFF'}`,160,122,256,4,()=>this.adjust(1));
       this.button(`CRT EFFECTS ${settings.crt?'ON':'OFF'}`,160,141,256,5,()=>this.adjust(1));
       this.button('BACK',160,161,110,6,()=>this.back());
-    }else if(this.screen==='credits'){
-      this.panel(160,90,304,174);this.text('CREDITS',160,19,0xc3ddd2,2);
-      ['DEAD PIXELS - THE LAST SIGNAL','DESIGN / CODE / ORIGINAL ART','AI-ASSISTED PROJECT WORKFLOW','KENNEY.NL - CC0 DETAILS','ORIGINAL GENERATED SOUNDTRACK','ORIGINAL MUSIC AND SOUND - CC0'].forEach((line,i)=>this.text(line,160,47+i*16,i===3?0xd3a378:0x94b0c2));
-      this.button('BACK',160,161,110,0,()=>this.back());
     }else{
       this.panel(160,96,278,91);this.text('RESET SAVED CAMPAIGN?',160,70,0xe3c69b);this.text('THIS REPLACES YOUR PROGRESS.',160,87,0x94b0c2);
       this.button('YES - NEW GAME',99,117,128,0,()=>this.launch(false));this.button('NO - BACK',235,117,116,1,()=>this.back());
@@ -86,12 +82,12 @@ export class MenuScene extends Phaser.Scene {
   private choose(index:number):void{
     if(index===0){if(saveManager.canContinue){this.screen='confirm';this.selection=1;this.draw();}else this.launch(false);}
     else if(index===1&&saveManager.canContinue)this.launch(true);
-    else if(index===2||index===3){this.screen=index===2?'settings':'credits';this.selection=0;this.draw();}
+    else if(index===2){this.screen='settings';this.selection=0;this.draw();}
   }
   private keyboard(code:string):void{
     if(this.starting)return;
     if(code==='Escape'){this.back();return;}
-    const count=this.screen==='main'?4:this.screen==='settings'?7:this.screen==='confirm'?2:1;
+    const count=this.screen==='main'?3:this.screen==='settings'?7:2;
     if(code==='ArrowDown'||code==='ArrowUp'){
       this.selection=(this.selection+(code==='ArrowDown'?1:count-1))%count;
       if(this.screen==='main'&&this.selection===1&&!saveManager.canContinue)this.selection=code==='ArrowDown'?2:0;
@@ -105,7 +101,6 @@ export class MenuScene extends Phaser.Scene {
     audioManager.cue('click');
     if(this.screen==='main')this.choose(this.selection);
     else if(this.screen==='settings'){if(this.selection===6)this.back();else this.adjust(1);}
-    else if(this.screen==='credits')this.back();
     else if(this.selection===0)this.launch(false);else this.back();
   }
   private adjust(direction:number):void{
